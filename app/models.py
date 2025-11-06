@@ -16,9 +16,34 @@ class Competencia(models.Model):
         choices=CATEGORIA_CHOICES
     )
     activa = models.BooleanField(default=True)
+    en_curso = models.BooleanField(default=False, verbose_name="En curso")
+    fecha_inicio = models.DateTimeField(null=True, blank=True, verbose_name="Fecha de inicio")
+    fecha_fin = models.DateTimeField(null=True, blank=True, verbose_name="Fecha de finalización")
+    
+    def iniciar_competencia(self):
+        """Inicia la competencia"""
+        if not self.en_curso:
+            self.en_curso = True
+            self.fecha_inicio = timezone.now()
+            self.save()
+            return True
+        return False
+    
+    def detener_competencia(self):
+        """Detiene la competencia"""
+        if self.en_curso:
+            self.en_curso = False
+            self.fecha_fin = timezone.now()
+            self.save()
+            return True
+        return False
     
     def __str__(self):
         return self.nombre
+    
+    class Meta:
+        verbose_name = "Competencia"
+        verbose_name_plural = "Competencias"
 
 class Juez(models.Model):
     nombre = models.CharField(max_length=200)
