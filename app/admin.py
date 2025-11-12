@@ -69,10 +69,12 @@ class CompetenciaAdmin(admin.ModelAdmin):
                 async_to_sync(channel_layer.group_send)(
                     group,
                     {
-                        'type': 'carrera.iniciada',
+                        'type': 'competencia.iniciada',
                         'data': {
-                            'mensaje': 'La carrera ha iniciado',
+                            'mensaje': 'La competencia ha iniciado. Ya puedes registrar tiempos.',
                             'competencia_id': competencia.id,
+                            'competencia_nombre': competencia.nombre,
+                            'en_curso': True,
                         }
                     }
                 )
@@ -84,6 +86,22 @@ class CompetenciaAdmin(admin.ModelAdmin):
         competencia = Competencia.objects.get(pk=pk)
         if competencia.detener_competencia():
             messages.success(request, f'La competencia "{competencia.nombre}" ha sido detenida exitosamente.')
+            # Notify jueces via channels
+            channel_layer = get_channel_layer()
+            for juez in competencia.jueces.all():
+                group = f'juez_{juez.id}'
+                async_to_sync(channel_layer.group_send)(
+                    group,
+                    {
+                        'type': 'competencia.detenida',
+                        'data': {
+                            'mensaje': 'La competencia ha finalizado. No se pueden registrar más tiempos.',
+                            'competencia_id': competencia.id,
+                            'competencia_nombre': competencia.nombre,
+                            'en_curso': False,
+                        }
+                    }
+                )
         else:
             messages.warning(request, f'La competencia "{competencia.nombre}" no está en curso.')
         return redirect('admin:app_competencia_changelist')

@@ -20,7 +20,28 @@ uv run daphne -b 127.0.0.1 -p 8000 server.asgi:application
 -   Admin: http://127.0.0.1:8000/admin/
 -   WebSocket: ws://127.0.0.1:8000/ws/juez/{id}/?token={token}
 
-📚 **Documentación WebSocket completa:** Ver `README_WEBSOCKET.md` y `docs/WEBSOCKET_SIMPLE.md`
+📚 **Documentación:**
+- `README_WEBSOCKET.md` - Guía completa de WebSocket
+- `docs/WEBSOCKET_SIMPLE.md` - Tutorial paso a paso
+- `docs/VALIDACION_COMPETENCIA.md` - **NUEVO:** Validación de competencia en curso
+
+🧪 **Archivos de prueba:**
+- `test_validacion_competencia.html` - **NUEVO:** Prueba interactiva de validación
+
+---
+
+## 🔒 Seguridad y Validaciones
+
+### Validación de Competencia en Curso
+
+El sistema ahora **valida que la competencia esté en curso** antes de aceptar registros de tiempo:
+
+- ✅ **Al conectar**: Solo permite WebSocket si la competencia está activa
+- ✅ **Al registrar**: Solo acepta tiempos si `competencia.en_curso = True`
+- ✅ **Notificaciones en tiempo real**: Cuando la competencia inicia/detiene
+- ✅ **Validación de equipos**: Solo equipos asignados al juez
+
+**Ver `docs/VALIDACION_COMPETENCIA.md` para detalles completos.**
 
 ---
 

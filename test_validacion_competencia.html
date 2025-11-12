@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Validación de Competencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .status {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .badge.success { background: #d4edda; color: #155724; }
+        .badge.danger { background: #f8d7da; color: #721c24; }
+        .badge.warning { background: #fff3cd; color: #856404; }
+        .badge.info { background: #d1ecf1; color: #0c5460; }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            background: #c82333;
+        }
+        
+        .log {
+            background: #1e1e1e;
+            color: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .log-success { color: #4caf50; }
+        .log-error { color: #f44336; }
+        .log-warning { color: #ff9800; }
+        .log-info { color: #2196f3; }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .info-box h3 {
+            margin-bottom: 10px;
+            color: #1976d2;
+        }
+        
+        .info-box ul {
+            margin-left: 20px;
+        }
+        
+        .info-box li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Prueba de Validación de Competencia</h1>
+            <p>Verifica que solo se puedan registrar tiempos cuando la competencia esté en curso</p>
+        </div>
+        
+        <div class="status">
+            <div class="status-item">
+                <span><strong>Estado WebSocket:</strong></span>
+                <span id="wsStatus" class="badge danger">Desconectado</span>
+            </div>
+            <div class="status-item">
+                <span><strong>Competencia en Curso:</strong></span>
+                <span id="competenciaStatus" class="badge warning">Desconocido</span>
+            </div>
+            <div class="status-item">
+                <span><strong>Nombre Competencia:</strong></span>
+                <span id="competenciaNombre">-</span>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <h3>📋 Instrucciones:</h3>
+                <ul>
+                    <li>1️⃣ Inicia sesión con tus credenciales</li>
+                    <li>2️⃣ Intenta registrar un tiempo (debe fallar si no ha iniciado)</li>
+                    <li>3️⃣ Ve al admin y <strong>inicia la competencia</strong></li>
+                    <li>4️⃣ Verás una notificación automática aquí</li>
+                    <li>5️⃣ Intenta registrar de nuevo (ahora debe funcionar)</li>
+                    <li>6️⃣ Detén la competencia desde el admin</li>
+                    <li>7️⃣ Intenta registrar (debe fallar nuevamente)</li>
+                </ul>
+            </div>
+            
+            <div id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" value="roryflowers" placeholder="Usuario">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" value="teclado12" placeholder="Contraseña">
+                </div>
+                <button class="btn btn-primary" onclick="login()">🔐 Iniciar Sesión</button>
+            </div>
+            
+            <div id="actions" style="display: none;">
+                <h3 style="margin-bottom: 15px;">Acciones Disponibles:</h3>
+                <button class="btn btn-success" id="btnRegistrar" onclick="intentarRegistrarTiempo()" disabled>
+                    ⏱️ Intentar Registrar Tiempo
+                </button>
+                <button class="btn btn-danger" onclick="desconectar()">
+                    🔌 Desconectar WebSocket
+                </button>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h3 style="margin-bottom: 15px;">📊 Log de Eventos:</h3>
+                <div class="log" id="log"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let token = null;
+        let juezId = null;
+        let competenciaEnCurso = false;
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateWSStatus(connected) {
+            const badge = document.getElementById('wsStatus');
+            if (connected) {
+                badge.textContent = 'Conectado';
+                badge.className = 'badge success';
+            } else {
+                badge.textContent = 'Desconectado';
+                badge.className = 'badge danger';
+            }
+        }
+
+        function updateCompetenciaStatus(enCurso, nombre = null) {
+            competenciaEnCurso = enCurso;
+            const badge = document.getElementById('competenciaStatus');
+            const btnRegistrar = document.getElementById('btnRegistrar');
+            
+            if (enCurso) {
+                badge.textContent = '🟢 En Curso';
+                badge.className = 'badge success';
+                btnRegistrar.disabled = false;
+            } else {
+                badge.textContent = '🔴 No Iniciada / Finalizada';
+                badge.className = 'badge danger';
+                btnRegistrar.disabled = true;
+            }
+            
+            if (nombre) {
+                document.getElementById('competenciaNombre').textContent = nombre;
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            addLog('🔐 Intentando iniciar sesión...', 'info');
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error en login');
+                }
+
+                const data = await response.json();
+                token = data.access;
+                juezId = data.juez.id;
+
+                addLog(`✅ Login exitoso. Juez: ${data.juez.username}`, 'success');
+                addLog(`📊 Competencia: ${data.juez.competencia.nombre}`, 'info');
+                addLog(`🏁 En curso: ${data.juez.competencia.en_curso}`, 'info');
+
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('actions').style.display = 'block';
+
+                conectarWebSocket();
+
+            } catch (error) {
+                addLog(`❌ Error en login: ${error.message}`, 'error');
+            }
+        }
+
+        function conectarWebSocket() {
+            addLog('🔌 Conectando al WebSocket...', 'info');
+
+            ws = new WebSocket(`ws://127.0.0.1:8000/ws/juez/${juezId}/?token=${token}`);
+
+            ws.onopen = () => {
+                addLog('✅ WebSocket conectado exitosamente', 'success');
+                updateWSStatus(true);
+            };
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                addLog(`📨 Mensaje recibido: ${msg.tipo}`, 'info');
+
+                switch (msg.tipo) {
+                    case 'conexion_establecida':
+                        addLog(`📊 ${msg.mensaje}`, 'success');
+                        updateCompetenciaStatus(msg.competencia.en_curso, msg.competencia.nombre);
+                        break;
+
+                    case 'competencia_iniciada':
+                        addLog(`🟢 ${msg.mensaje}`, 'success');
+                        updateCompetenciaStatus(true, msg.competencia.nombre);
+                        alert('🟢 ¡COMPETENCIA INICIADA!\n\nAhora puedes registrar tiempos.');
+                        break;
+
+                    case 'competencia_detenida':
+                        addLog(`🔴 ${msg.mensaje}`, 'warning');
+                        updateCompetenciaStatus(false, msg.competencia.nombre);
+                        alert('🔴 COMPETENCIA DETENIDA\n\nYa no se pueden registrar más tiempos.');
+                        break;
+
+                    case 'tiempo_registrado':
+                        addLog(`✅ Tiempo registrado: ${msg.registro.equipo_nombre} (${msg.registro.minutos}:${msg.registro.segundos}.${msg.registro.milisegundos})`, 'success');
+                        alert(`✅ ¡TIEMPO REGISTRADO!\n\nEquipo: ${msg.registro.equipo_nombre}\nDorsal: ${msg.registro.equipo_dorsal}\nTiempo: ${msg.registro.horas}:${String(msg.registro.minutos).padStart(2, '0')}:${String(msg.registro.segundos).padStart(2, '0')}.${String(msg.registro.milisegundos).padStart(3, '0')}`);
+                        break;
+
+                    case 'error':
+                        addLog(`❌ Error: ${msg.mensaje}`, 'error');
+                        alert(`❌ ERROR\n\n${msg.mensaje}`);
+                        break;
+
+                    default:
+                        addLog(`ℹ️ Mensaje: ${JSON.stringify(msg)}`, 'info');
+                }
+            };
+
+            ws.onerror = (error) => {
+                addLog('❌ Error en WebSocket', 'error');
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                addLog('🔌 WebSocket desconectado', 'warning');
+                updateWSStatus(false);
+            };
+        }
+
+        function intentarRegistrarTiempo() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addLog('❌ WebSocket no está conectado', 'error');
+                alert('❌ WebSocket no está conectado');
+                return;
+            }
+
+            const tiempo = Math.floor(Math.random() * 3600000); // 0-60 minutos random
+            const horas = Math.floor(tiempo / 3600000);
+            const minutos = Math.floor((tiempo % 3600000) / 60000);
+            const segundos = Math.floor((tiempo % 60000) / 1000);
+            const milisegundos = tiempo % 1000;
+
+            const mensaje = {
+                tipo: 'registrar_tiempo',
+                equipo_id: 1, // Cambiar según tu equipo
+                tiempo: tiempo,
+                horas: horas,
+                minutos: minutos,
+                segundos: segundos,
+                milisegundos: milisegundos
+            };
+
+            addLog(`📤 Enviando registro de tiempo: ${minutos}:${String(segundos).padStart(2, '0')}.${String(milisegundos).padStart(3, '0')}`, 'info');
+            ws.send(JSON.stringify(mensaje));
+        }
+
+        function desconectar() {
+            if (ws) {
+                ws.close();
+                addLog('🔌 Desconexión manual', 'warning');
+            }
+        }
+
+        // Auto-scroll en log
+        addLog('🚀 Sistema iniciado. Por favor inicia sesión.', 'info');
+    </script>
+</body>
+</html>

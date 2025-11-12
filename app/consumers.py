@@ -19,11 +19,35 @@ def get_juez_from_token(token):
         if not juez_id:
             return None
         
-        # Obtener el juez
-        juez = Juez.objects.get(id=juez_id, activo=True)
+        # Obtener el juez con su competencia (select_related para optimizar)
+        juez = Juez.objects.select_related('competencia').get(id=juez_id, activo=True)
         return juez
     except Exception:
         return None
+
+
+@database_sync_to_async
+def verificar_competencia_activa(juez):
+    """
+    Verifica que el juez tenga una competencia activa.
+    """
+    return juez.competencia and juez.competencia.activa
+
+
+@database_sync_to_async
+def obtener_estado_competencia(juez):
+    """
+    Obtiene el estado de la competencia del juez.
+    """
+    if not juez.competencia:
+        return None
+    
+    return {
+        'id': juez.competencia.id,
+        'nombre': juez.competencia.nombre,
+        'en_curso': juez.competencia.en_curso,
+        'activa': juez.competencia.activa,
+    }
 
 
 class JuezConsumer(AsyncJsonWebsocketConsumer):
@@ -53,9 +77,23 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
             await self.close()
             return
 
+        # Verificar que la competencia esté activa (puede conectarse pero no enviar tiempos hasta que inicie)
+        competencia_activa = await verificar_competencia_activa(self.juez)
+        if not competencia_activa:
+            await self.close()
+            return
+
         self.group_name = f'juez_{self.juez_id}'
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+        
+        # Enviar estado de la competencia al conectar
+        estado_competencia = await obtener_estado_competencia(self.juez)
+        await self.send_json({
+            'tipo': 'conexion_establecida',
+            'mensaje': 'Conectado exitosamente',
+            'competencia': estado_competencia
+        })
 
     async def disconnect(self, close_code):
         try:
@@ -151,10 +189,21 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
         """
         Guarda el registro de tiempo en la base de datos.
         Valida que el equipo pertenezca al juez autenticado.
+        Valida que la competencia esté en curso.
         """
         from .models import Equipo, RegistroTiempo
         
         try:
+            # Refrescar el juez con su competencia para tener datos actualizados
+            from .models import Juez
+            juez_actualizado = Juez.objects.select_related('competencia').get(id=self.juez.id)
+            
+            # Verificar que la competencia esté en curso
+            if not juez_actualizado.competencia or not juez_actualizado.competencia.en_curso:
+                raise ValueError(
+                    'No se pueden registrar tiempos. La competencia no ha iniciado o ya finalizó.'
+                )
+            
             # Verificar que el equipo existe
             equipo = Equipo.objects.get(id=equipo_id)
             
@@ -181,7 +230,38 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             raise Exception(f'Error al guardar registro: {str(e)}')
 
+    async def competencia_iniciada(self, event):
+        """
+        Notifica al cliente que la competencia ha iniciado.
+        Ahora puede enviar registros de tiempos.
+        """
+        await self.send_json({
+            'tipo': 'competencia_iniciada',
+            'mensaje': event['data']['mensaje'],
+            'competencia': {
+                'id': event['data']['competencia_id'],
+                'nombre': event['data']['competencia_nombre'],
+                'en_curso': event['data']['en_curso'],
+            }
+        })
+    
+    async def competencia_detenida(self, event):
+        """
+        Notifica al cliente que la competencia ha finalizado.
+        Ya no puede enviar más registros de tiempos.
+        """
+        await self.send_json({
+            'tipo': 'competencia_detenida',
+            'mensaje': event['data']['mensaje'],
+            'competencia': {
+                'id': event['data']['competencia_id'],
+                'nombre': event['data']['competencia_nombre'],
+                'en_curso': event['data']['en_curso'],
+            }
+        })
+
     async def carrera_iniciada(self, event):
+        """Mantener compatibilidad con código antiguo"""
         await self.send_json({
             'type': 'carrera.iniciada',
             'data': event.get('data', {})
