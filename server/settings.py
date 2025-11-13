@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'channels',
+    'drf_spectacular',  # ← Documentación automática de API
     'app',
     'mensajeria',
 ]
@@ -157,6 +158,43 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'app.authentication.JuezJWTAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # ← Para documentación
+}
+
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Server5K API',
+    'DESCRIPTION': 'API para gestión de competencias 5K con registro de tiempos en tiempo real',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    
+    # Configuración de autenticación JWT
+    'SECURITY': [
+        {
+            'bearerAuth': []
+        }
+    ],
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'bearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    },
+    
+    # Configuración de UI
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
+    },
+    
+    # Endpoints a excluir
+    'PREPROCESSING_HOOKS': [],
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
 }
 
 # SimpleJWT Configuration

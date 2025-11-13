@@ -4,14 +4,52 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
-from .serializers import EnvioTiemposSerializer, CompetenciaSerializer, EquipoSerializer, JuezMeSerializer
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
+from .serializers import CompetenciaSerializer, EquipoSerializer, JuezMeSerializer
 from .models import Equipo, RegistroTiempo, Juez, Competencia
 
 
 
 class LoginView(APIView):
+    """
+    Autenticación de jueces
+    
+    Endpoint para que los jueces inicien sesión y obtengan tokens JWT.
+    """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        summary="Iniciar sesión",
+        description="Autentica un juez y retorna tokens de acceso (access) y renovación (refresh). Use el endpoint /api/me/ para obtener información del juez.",
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'username': {'type': 'string', 'example': 'juez1'},
+                    'password': {'type': 'string', 'example': 'password123'},
+                },
+                'required': ['username', 'password']
+            }
+        },
+        responses={
+            200: {
+                'description': 'Login exitoso',
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'access': 'eyJ0eXAiOiJKV1QiLCJhbGc...',
+                            'refresh': 'eyJ0eXAiOiJKV1QiLCJhbGc...'
+                        }
+                    }
+                }
+            },
+            400: {'description': 'Datos faltantes'},
+            401: {'description': 'Credenciales inválidas'},
+            403: {'description': 'Usuario inactivo'},
+        },
+        tags=['Autenticación']
+    )
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -55,29 +93,9 @@ class LoginView(APIView):
         refresh['juez_id'] = juez.id
         refresh['username'] = juez.username
         
-        # Datos del juez para respuesta
-        juez_data = {
-            'id': juez.id,
-            'username': juez.username,
-            'email': juez.email,
-            'first_name': juez.first_name,
-            'last_name': juez.last_name,
-            'competencia': {
-                'id': juez.competencia.id,
-                'nombre': juez.competencia.nombre,
-                'fecha_hora': juez.competencia.fecha_hora.isoformat(),
-                'en_curso': juez.competencia.en_curso,
-                'activa': juez.competencia.activa,
-            },
-            'activo': juez.activo,
-            'telefono': juez.telefono,
-        }
-        
         return Response({
             'access': str(refresh.access_token),
             'refresh': str(refresh),
-            'juez': juez_data,
-            'message': 'Login exitoso'
         }, status=status.HTTP_200_OK)
 
 
@@ -115,10 +133,21 @@ class LogoutView(APIView):
 
 class MeView(APIView):
     """
-    GET: Obtener información del juez autenticado
+    Información del juez autenticado
+    
+    Retorna los datos personales del juez que ha iniciado sesión.
     """
     permission_classes = [IsAuthenticated]
     
+    @extend_schema(
+        summary="Obtener mi información",
+        description="Retorna la información personal del juez autenticado (sin credenciales)",
+        responses={
+            200: JuezMeSerializer,
+            401: {'description': 'No autenticado'},
+        },
+        tags=['Juez']
+    )
     def get(self, request):
         """
         Retorna la información personal del juez que ha iniciado sesión.
@@ -162,37 +191,6 @@ class RefreshTokenView(APIView):
             )
 
 
-class EnviarTiemposView(APIView):
-    permission_classes = [IsAuthenticated]
-
-
-    def post(self, request):
-        serializer = EnvioTiemposSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        equipo_id = serializer.validated_data['equipo_id']
-        registros = serializer.validated_data['registros'][:15]
-
-        juez = request.user
-
-        try:
-            equipo = Equipo.objects.get(pk=equipo_id)
-        except Equipo.DoesNotExist:
-            return Response({'detail': 'Equipo no existe.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if equipo.juez_asignado_id != juez.id:
-            return Response({'detail': 'No autorizado para enviar registros para este equipo.'}, status=status.HTTP_403_FORBIDDEN)
-
-        created = []
-        for reg in registros:
-            rt = RegistroTiempo.objects.create(
-                equipo=equipo,
-                tiempo=reg['tiempo'],
-                timestamp=reg['timestamp']
-            )
-            created.append(str(rt.id_registro))
-        return Response({'created': created}, status=status.HTTP_201_CREATED)
-
-
 # ============================================
 # VIEWSETS PARA COMPETENCIAS Y EQUIPOS
 # ============================================
@@ -201,17 +199,52 @@ class CompetenciaViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet para Competencias (solo lectura)
     
-    Endpoints automáticos:
-    - GET /api/competencias/          -> Lista todas las competencias
-    - GET /api/competencias/{id}/     -> Detalle de una competencia
+    Permite listar todas las competencias y obtener detalles de una competencia específica.
     
-    Filtros disponibles via query params:
-    - ?activa=true/false
-    - ?en_curso=true/false
+    Filtros disponibles:
+    - ?activa=true/false - Filtra por competencias activas
+    - ?en_curso=true/false - Filtra por competencias en curso
     """
     queryset = Competencia.objects.all().order_by('-fecha_hora')
     serializer_class = CompetenciaSerializer
     permission_classes = [IsAuthenticated]
+    
+    @extend_schema(
+        summary="Listar competencias",
+        description="Obtiene todas las competencias con filtros opcionales",
+        parameters=[
+            OpenApiParameter(
+                name='activa',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='Filtrar por competencias activas (true/false)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='en_curso',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='Filtrar por competencias en curso (true/false)',
+                required=False,
+            ),
+        ],
+        responses={200: CompetenciaSerializer(many=True)},
+        tags=['Competencias']
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
+    @extend_schema(
+        summary="Obtener competencia",
+        description="Obtiene los detalles de una competencia específica por ID",
+        responses={
+            200: CompetenciaSerializer,
+            404: {'description': 'Competencia no encontrada'},
+        },
+        tags=['Competencias']
+    )
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
     
     def get_queryset(self):
         """
@@ -238,13 +271,11 @@ class EquipoViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet para Equipos (solo lectura)
     
-    Endpoints automáticos:
-    - GET /api/equipos/          -> Lista todos los equipos
-    - GET /api/equipos/{id}/     -> Detalle de un equipo
+    Permite listar todos los equipos y obtener detalles de un equipo específico.
     
-    Filtros disponibles via query params:
-    - ?competencia_id={id}
-    - ?juez_id={id}
+    Filtros disponibles:
+    - ?competencia_id={id} - Filtra equipos por competencia
+    - ?juez_id={id} - Filtra equipos por juez asignado
     """
     queryset = Equipo.objects.select_related(
         'juez_asignado',
@@ -252,6 +283,43 @@ class EquipoViewSet(viewsets.ReadOnlyModelViewSet):
     ).all().order_by('dorsal')
     serializer_class = EquipoSerializer
     permission_classes = [IsAuthenticated]
+    
+    @extend_schema(
+        summary="Listar equipos",
+        description="Obtiene todos los equipos con filtros opcionales",
+        parameters=[
+            OpenApiParameter(
+                name='competencia_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filtrar por ID de competencia',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='juez_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filtrar por ID de juez',
+                required=False,
+            ),
+        ],
+        responses={200: EquipoSerializer(many=True)},
+        tags=['Equipos']
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
+    @extend_schema(
+        summary="Obtener equipo",
+        description="Obtiene los detalles de un equipo específico por ID",
+        responses={
+            200: EquipoSerializer,
+            404: {'description': 'Equipo no encontrado'},
+        },
+        tags=['Equipos']
+    )
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
     
     def get_queryset(self):
         """

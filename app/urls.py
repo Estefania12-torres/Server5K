@@ -5,7 +5,6 @@ from .views import (
     LogoutView,
     MeView,
     RefreshTokenView,
-    EnviarTiemposView,
     CompetenciaViewSet,
     EquipoViewSet,
 )
@@ -21,9 +20,6 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('me/', MeView.as_view(), name='me'),
     path('token/refresh/', RefreshTokenView.as_view(), name='token_refresh'),
-    
-    # Tiempos
-    path('enviar_tiempos/', EnviarTiemposView.as_view(), name='enviar_tiempos'),
     
     # Incluir rutas del router (Competencias y Equipos)
     path('', include(router.urls)),

@@ -2,16 +2,6 @@ from rest_framework import serializers
 from .models import Competencia, Equipo, Juez
 
 
-class TiempoSerializer(serializers.Serializer):
-    timestamp = serializers.DateTimeField()
-    tiempo = serializers.IntegerField()  # milliseconds
-
-
-class EnvioTiemposSerializer(serializers.Serializer):
-    equipo_id = serializers.IntegerField()
-    registros = TiempoSerializer(many=True)
-
-
 class CompetenciaSerializer(serializers.ModelSerializer):
     """Serializer para el modelo Competencia - Solo campos básicos"""
     
