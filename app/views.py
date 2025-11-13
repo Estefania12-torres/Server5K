@@ -8,6 +8,8 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExampl
 from drf_spectacular.types import OpenApiTypes
 from .serializers import CompetenciaSerializer, EquipoSerializer, JuezMeSerializer
 from .models import Equipo, RegistroTiempo, Juez, Competencia
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Prefetch
 
 
 
@@ -334,3 +336,26 @@ class EquipoViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(juez_asignado_id=juez_id)
         
         return queryset
+
+
+# --- Vistas HTML simples para UI local ---------------------------------
+def competencia_list_view(request):
+    """Listado público de competencias activas (interfaz simple)."""
+    competencias = Competencia.objects.filter(activa=True).order_by('-fecha_hora')
+    return render(request, 'app/competencia_list.html', {'competencias': competencias})
+
+
+def competencia_detail_view(request, pk):
+    """Detalle de competencia: lista de equipos y sus registros de tiempo."""
+    competencia = get_object_or_404(Competencia, pk=pk, activa=True)
+
+    # Prefetch registros de tiempo ordenados por tiempo ascendente
+    tiempos_qs = RegistroTiempo.objects.order_by('tiempo')
+    equipos = Equipo.objects.filter(juez_asignado__competencia=competencia).select_related('juez_asignado').prefetch_related(
+        Prefetch('tiempos', queryset=tiempos_qs, to_attr='prefetched_tiempos')
+    ).order_by('dorsal')
+
+    return render(request, 'app/competencia_detail.html', {
+        'competencia': competencia,
+        'equipos': equipos,
+    })

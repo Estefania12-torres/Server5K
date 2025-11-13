@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ competencia.nombre }} — Equipos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <a href="{% url 'app_ui:competencia_list' %}" class="btn btn-sm btn-link">← Volver a competencias</a>
+  <h1 class="mb-3">{{ competencia.nombre }}</h1>
+  <p class="text-muted">{{ competencia.fecha_hora }} — Categoría: {{ competencia.categoria }}</p>
+
+  {% if equipos %}
+    <div class="accordion" id="equiposAccordion">
+      {% for equipo in equipos %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
+              Dorsal {{ equipo.dorsal }} — {{ equipo.nombre }}
+            </button>
+          </h2>
+          <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#equiposAccordion">
+            <div class="accordion-body">
+              <p><strong>Juez:</strong> {{ equipo.juez_asignado.get_full_name|default:equipo.juez_asignado.username }}</p>
+
+              {% if equipo.prefetched_tiempos %}
+                <table class="table table-sm table-striped">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Tiempo (ms)</th>
+                      <th>Formateado</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for rt in equipo.prefetched_tiempos %}
+                      <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ rt.tiempo }}</td>
+                        <td>{{ rt.horas }}h {{ rt.minutos }}m {{ rt.segundos }}s {{ rt.milisegundos }}ms</td>
+                        <td>{{ rt.timestamp }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              {% else %}
+                <div class="alert alert-warning">No hay registros de tiempo para este equipo.</div>
+              {% endif %}
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">No hay equipos asignados a esta competencia.</div>
+  {% endif %}
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

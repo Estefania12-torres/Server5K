@@ -6,6 +6,14 @@ channels-redis>=4.0.0
 djangorestframework-simplejwt>=2.8.0
 daphne>=4.0.0
 websockets>=11.0.3
+# API docs / schema
+drf-spectacular>=0.26.0
+
+# Static files
+whitenoise>=6.4.0
+
+# Optional / convenient
+python-dotenv>=1.0.0
 # dev / optional
 pytest
 pytest-django

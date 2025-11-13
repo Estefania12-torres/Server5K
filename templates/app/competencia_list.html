@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Competencias activas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <h1 class="mb-3">Competencias activas</h1>
+
+  {% if competencias %}
+    <div class="list-group">
+      {% for comp in competencias %}
+        <a href="{% url 'app_ui:competencia_detail' comp.pk %}" class="list-group-item list-group-item-action">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ comp.nombre }}</h5>
+            <small>{{ comp.fecha_hora }}</small>
+          </div>
+          <p class="mb-1">Categoría: {{ comp.categoria }} — {% if comp.en_curso %}<span class="badge bg-success">En curso</span>{% else %}<span class="text-muted">No iniciada</span>{% endif %}</p>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">No hay competencias activas.</div>
+  {% endif %}
+
+  <hr>
+  <p class="text-muted small">Interfaz mínima para inspeccionar competencias, equipos y tiempos.</p>
+</div>
+</body>
+</html>
