@@ -107,11 +107,14 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
         
         Mensajes soportados:
         1. registrar_tiempo: Registra el tiempo de llegada de un equipo
+        2. registrar_tiempos: Registra múltiples tiempos en batch
         """
         tipo = content.get('tipo')
         
         if tipo == 'registrar_tiempo':
             await self.manejar_registro_tiempo(content)
+        elif tipo == 'registrar_tiempos':
+            await self.manejar_registro_tiempos_batch(content)
         else:
             # Mensaje no reconocido
             await self.send_json({
@@ -182,6 +185,103 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json({
                 'tipo': 'error',
                 'mensaje': f'Error al registrar tiempo: {str(e)}'
+            })
+    
+    async def manejar_registro_tiempos_batch(self, content):
+        """
+        Registra múltiples tiempos en batch (lote).
+        
+        Esperado en content:
+        {
+            "tipo": "registrar_tiempos",
+            "equipo_id": 1,
+            "registros": [
+                {
+                    "tiempo": 1234567,
+                    "horas": 0,
+                    "minutos": 20,
+                    "segundos": 34,
+                    "milisegundos": 567
+                },
+                ...
+            ]
+        }
+        """
+        try:
+            equipo_id = content.get('equipo_id')
+            registros = content.get('registros', [])
+            
+            # Validar datos
+            if equipo_id is None:
+                await self.send_json({
+                    'tipo': 'error',
+                    'mensaje': 'Falta el equipo_id'
+                })
+                return
+            
+            if not registros or not isinstance(registros, list):
+                await self.send_json({
+                    'tipo': 'error',
+                    'mensaje': 'Faltan los registros o no es una lista válida'
+                })
+                return
+            
+            # Procesar cada registro
+            registros_guardados = []
+            registros_fallidos = []
+            
+            for idx, reg in enumerate(registros):
+                try:
+                    tiempo = reg.get('tiempo')
+                    horas = reg.get('horas', 0)
+                    minutos = reg.get('minutos', 0)
+                    segundos = reg.get('segundos', 0)
+                    milisegundos = reg.get('milisegundos', 0)
+                    
+                    if tiempo is None:
+                        registros_fallidos.append({
+                            'indice': idx,
+                            'error': 'Falta el campo tiempo'
+                        })
+                        continue
+                    
+                    # Guardar el registro
+                    registro = await self.guardar_registro_tiempo(
+                        equipo_id=equipo_id,
+                        tiempo=tiempo,
+                        horas=horas,
+                        minutos=minutos,
+                        segundos=segundos,
+                        milisegundos=milisegundos
+                    )
+                    
+                    if registro:
+                        registros_guardados.append({
+                            'indice': idx,
+                            'id_registro': str(registro.id_registro),
+                            'tiempo': registro.tiempo
+                        })
+                    
+                except Exception as e:
+                    registros_fallidos.append({
+                        'indice': idx,
+                        'error': str(e)
+                    })
+            
+            # Enviar respuesta con resumen
+            await self.send_json({
+                'tipo': 'tiempos_registrados_batch',
+                'total_enviados': len(registros),
+                'total_guardados': len(registros_guardados),
+                'total_fallidos': len(registros_fallidos),
+                'registros_guardados': registros_guardados,
+                'registros_fallidos': registros_fallidos
+            })
+            
+        except Exception as e:
+            await self.send_json({
+                'tipo': 'error',
+                'mensaje': f'Error al procesar batch: {str(e)}'
             })
     
     @database_sync_to_async

@@ -15,17 +15,15 @@ dependencies = [
     "websockets>=11.0.3",
     "whitenoise>=6.11.0",
     "drf-spectacular>=0.29.0",
+    "django-filter>=24.3",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest",
     "pytest-django",
     "coverage",
 ]
-
-[tool.uv]
-dev-dependencies = []
 
 [project.scripts]
 serve = "daphne:main"
