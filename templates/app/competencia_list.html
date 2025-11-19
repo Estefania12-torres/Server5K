@@ -1,33 +1,70 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Competencias activas</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<div class="container py-4">
-  <h1 class="mb-3">Competencias activas</h1>
+{% extends 'base.html' %}
 
-  {% if competencias %}
-    <div class="list-group">
-      {% for comp in competencias %}
-        <a href="{% url 'app_ui:competencia_detail' comp.pk %}" class="list-group-item list-group-item-action">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">{{ comp.nombre }}</h5>
-            <small>{{ comp.fecha_hora }}</small>
-          </div>
-          <p class="mb-1">Categoría: {{ comp.categoria }} — {% if comp.en_curso %}<span class="badge bg-success">En curso</span>{% else %}<span class="text-muted">No iniciada</span>{% endif %}</p>
-        </a>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="alert alert-info">No hay competencias activas.</div>
-  {% endif %}
+{% block title %}Lista de Competencias{% endblock %}
 
-  <hr>
-  <p class="text-muted small">Interfaz mínima para inspeccionar competencias, equipos y tiempos.</p>
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-trophy"></i> Competencias Activas</h1>
+    <p>Selecciona una competencia para ver los resultados detallados por equipo</p>
 </div>
-</body>
-</html>
+
+{% if competencias %}
+    <div class="row g-4">
+        {% for competencia in competencias %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title mb-0">{{ competencia.nombre }}</h5>
+                        {% with estado=competencia.get_estado_display %}
+                            {% if estado == 'en_curso' %}
+                                <span class="badge badge-success">
+                                    <i class="bi bi-play-circle-fill"></i> En Curso
+                                </span>
+                            {% elif estado == 'finalizada' %}
+                                <span class="badge bg-dark text-white">
+                                    <i class="bi bi-check-circle-fill"></i> Finalizada
+                                </span>
+                            {% else %}
+                                <span class="badge badge-secondary">
+                                    <i class="bi bi-clock-history"></i> Programada
+                                </span>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="text-muted mb-2">
+                            <i class="bi bi-calendar3"></i> 
+                            {{ competencia.fecha_hora|date:"d M Y" }}
+                        </p>
+                        <p class="text-muted mb-2">
+                            <i class="bi bi-clock"></i> 
+                            {{ competencia.fecha_hora|date:"H:i" }}
+                        </p>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-tag"></i> 
+                            {{ competencia.get_categoria_display }}
+                        </p>
+                    </div>
+                    
+                    <a href="{% url 'ui:competencia_detail' competencia.pk %}" class="btn btn-primary w-100">
+                        <i class="bi bi-eye"></i> Ver Resultados
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h3>No hay competencias activas</h3>
+                <p class="text-muted">Las competencias aparecerán aquí cuando sean creadas</p>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

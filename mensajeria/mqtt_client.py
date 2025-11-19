@@ -43,10 +43,11 @@ def on_message(client, userdata, msg):
             print(f" Equipo con dorsal {dorsal} no encontrado para el juez {juez_identificador}.")
             return
 
-        # Crear registro de tiempo de forma atómica
+        # Crear registro de tiempo de forma atómica con la competencia
         with transaction.atomic():
             RegistroTiempo.objects.create(
                 equipo=equipo,
+                competencia=juez.competencia,  # Asignar la competencia del juez
                 tiempo=tiempo,
                 timestamp=timestamp
             )

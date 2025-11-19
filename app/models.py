@@ -46,6 +46,25 @@ class Competencia(models.Model):
     class Meta:
         verbose_name = "Competencia"
         verbose_name_plural = "Competencias"
+        
+    def get_estado_display(self):
+        """Retorna el estado actual de la competencia"""
+        if self.en_curso:
+            return 'en_curso'
+        elif self.fecha_fin:
+            return 'finalizada'
+        else:
+            return 'programada'
+    
+    def get_estado_texto(self):
+        """Retorna el texto del estado para mostrar"""
+        estado = self.get_estado_display()
+        estados = {
+            'en_curso': 'En Curso',
+            'finalizada': 'Finalizada',
+            'programada': 'Programada'
+        }
+        return estados.get(estado, 'Desconocido')
 
 class Juez(models.Model):
     # Credenciales de autenticación
@@ -120,6 +139,37 @@ class Equipo(models.Model):
     
     def __str__(self):
         return f"{self.nombre} (Dorsal {self.dorsal})"
+    
+    def tiempo_total(self):
+        """Retorna el tiempo total acumulado de todos los registros en milisegundos"""
+        from django.db.models import Sum
+        total = self.tiempos.aggregate(total=Sum('tiempo'))['total']
+        return total or 0
+
+    def tiempo_promedio(self):
+        """Retorna el tiempo promedio de todos los registros en milisegundos"""
+        from django.db.models import Avg
+        promedio = self.tiempos.aggregate(promedio=Avg('tiempo'))['promedio']
+        return int(promedio) if promedio else 0
+
+    def mejor_tiempo(self):
+        """Retorna el mejor tiempo (más bajo) del equipo"""
+        return self.tiempos.order_by('tiempo').first()
+
+    def tiempo_total_formateado(self):
+        """Retorna el tiempo total en formato legible"""
+        total_ms = self.tiempo_total()
+        ms = total_ms % 1000
+        total_seconds = total_ms // 1000
+        s = total_seconds % 60
+        total_minutes = total_seconds // 60
+        m = total_minutes % 60
+        h = total_minutes // 60
+        return f"{h}h {m}m {s}s {ms}ms"
+
+    def numero_registros(self):
+        """Retorna el número total de registros de tiempo"""
+        return self.tiempos.count()
 
 class RegistroTiempo(models.Model):
     id_registro = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -128,6 +178,14 @@ class RegistroTiempo(models.Model):
         Equipo, 
         on_delete=models.CASCADE, 
         related_name='tiempos'
+    )
+    
+    # Relación directa con competencia para evitar datos inconsistentes
+    competencia = models.ForeignKey(
+        Competencia,
+        on_delete=models.CASCADE,
+        related_name='registros_tiempo',
+        verbose_name="Competencia"
     )
     
     # Keep a single integer field for total milliseconds (used for ordering/search)
@@ -145,10 +203,6 @@ class RegistroTiempo(models.Model):
     def juez(self):
         return self.equipo.juez_asignado
     
-    @property
-    def competencia(self):
-        return self.equipo.competencia  
-    
     class Meta:
         ordering = ['tiempo']
         indexes = [
@@ -165,7 +219,12 @@ class RegistroTiempo(models.Model):
         - If any of the granular fields are non-zero, compute `tiempo` from them.
         - Otherwise, if all granular fields are zero and `tiempo` is present, derive the granular
           fields from `tiempo` so existing records are preserved.
+        - Auto-assign competencia from equipo if not provided.
         """
+        # Auto-asignar competencia desde el equipo si no está presente
+        if not self.competencia_id:
+            self.competencia = self.equipo.competencia
+        
         try:
             any_component = any([self.horas, self.minutos, self.segundos, self.milisegundos])
         except Exception:

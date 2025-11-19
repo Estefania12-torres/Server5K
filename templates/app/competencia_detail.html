@@ -1,65 +1,201 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ competencia.nombre }} — Equipos</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<div class="container py-4">
-  <a href="{% url 'app_ui:competencia_list' %}" class="btn btn-sm btn-link">← Volver a competencias</a>
-  <h1 class="mb-3">{{ competencia.nombre }}</h1>
-  <p class="text-muted">{{ competencia.fecha_hora }} — Categoría: {{ competencia.categoria }}</p>
+{% extends 'base.html' %}
 
-  {% if equipos %}
-    <div class="accordion" id="equiposAccordion">
-      {% for equipo in equipos %}
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
-              Dorsal {{ equipo.dorsal }} — {{ equipo.nombre }}
-            </button>
-          </h2>
-          <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#equiposAccordion">
-            <div class="accordion-body">
-              <p><strong>Juez:</strong> {{ equipo.juez_asignado.get_full_name|default:equipo.juez_asignado.username }}</p>
+{% block title %}{{ competencia.nombre }} - Resultados{% endblock %}
 
-              {% if equipo.prefetched_tiempos %}
-                <table class="table table-sm table-striped">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Tiempo (ms)</th>
-                      <th>Formateado</th>
-                      <th>Timestamp</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for rt in equipo.prefetched_tiempos %}
-                      <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ rt.tiempo }}</td>
-                        <td>{{ rt.horas }}h {{ rt.minutos }}m {{ rt.segundos }}s {{ rt.milisegundos }}ms</td>
-                        <td>{{ rt.timestamp }}</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              {% else %}
-                <div class="alert alert-warning">No hay registros de tiempo para este equipo.</div>
-              {% endif %}
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'ui:competencia_list' %}">
+                <i class="bi bi-house"></i> Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item active">{{ competencia.nombre }}</li>
+    </ol>
+</nav>
 
+<!-- Header de Competencia -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-3">
+                    <i class="bi bi-trophy-fill text-warning"></i>
+                    {{ competencia.nombre }}
+                </h1>
+                <div class="d-flex flex-wrap gap-3">
+                    <div>
+                        <small class="text-muted d-block">Categoría</small>
+                        <span class="badge badge-primary">
+                            {{ competencia.get_categoria_display }}
+                        </span>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Fecha</small>
+                        <strong>{{ competencia.fecha_hora|date:"d M Y, H:i" }}</strong>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Estado</small>
+                        {% if competencia.en_curso %}
+                            <span class="badge badge-success">
+                                <i class="bi bi-play-circle-fill"></i> En Curso
+                            </span>
+                        {% else %}
+                            <span class="badge badge-secondary">Finalizada</span>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-          </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="text-muted">
+                    <small>Total de Equipos</small>
+                    <h3 class="mb-0">{{ equipos|length }}</h3>
+                </div>
+            </div>
         </div>
-      {% endfor %}
     </div>
-  {% else %}
-    <div class="alert alert-info">No hay equipos asignados a esta competencia.</div>
-  {% endif %}
-
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+
+<!-- Filtros de Ordenamiento -->
+{% if equipos %}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <h6 class="mb-0">
+                    <i class="bi bi-funnel"></i> Ordenar equipos por:
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <div class="btn-group w-100" role="group">
+                    <!-- Botón Mejor Tiempo -->
+                    <a href="?orden=mejor_tiempo{% if request.GET.orden == 'mejor_tiempo' and request.GET.dir == 'asc' %}&dir=desc{% else %}&dir=asc{% endif %}" 
+                       class="btn btn-sm {% if request.GET.orden == 'mejor_tiempo' or not request.GET.orden %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        <i class="bi bi-award"></i> Mejor Tiempo
+                        {% if request.GET.orden == 'mejor_tiempo' or not request.GET.orden %}
+                            {% if request.GET.dir == 'desc' %}
+                                <i class="bi bi-sort-down"></i>
+                            {% else %}
+                                <i class="bi bi-sort-up"></i>
+                            {% endif %}
+                        {% endif %}
+                    </a>
+                    
+                    <!-- Botón Tiempo Total -->
+                    <a href="?orden=tiempo_total{% if request.GET.orden == 'tiempo_total' and request.GET.dir == 'asc' %}&dir=desc{% else %}&dir=asc{% endif %}" 
+                       class="btn btn-sm {% if request.GET.orden == 'tiempo_total' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        <i class="bi bi-hourglass"></i> Tiempo Total
+                        {% if request.GET.orden == 'tiempo_total' %}
+                            {% if request.GET.dir == 'desc' %}
+                                <i class="bi bi-sort-down"></i>
+                            {% else %}
+                                <i class="bi bi-sort-up"></i>
+                            {% endif %}
+                        {% endif %}
+                    </a>
+                    
+                    <!-- Botón Promedio -->
+                    <a href="?orden=promedio{% if request.GET.orden == 'promedio' and request.GET.dir == 'asc' %}&dir=desc{% else %}&dir=asc{% endif %}" 
+                       class="btn btn-sm {% if request.GET.orden == 'promedio' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        <i class="bi bi-speedometer2"></i> Promedio
+                        {% if request.GET.orden == 'promedio' %}
+                            {% if request.GET.dir == 'desc' %}
+                                <i class="bi bi-sort-down"></i>
+                            {% else %}
+                                <i class="bi bi-sort-up"></i>
+                            {% endif %}
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resultados por Equipo -->
+<div class="row g-4">
+    {% for equipo in equipos %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <!-- Nombre del equipo y juez -->
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <h5 class="mb-2">
+                            <span class="badge bg-dark me-2" style="font-size: 1rem;">{{ equipo.dorsal }}</span>
+                            {{ equipo.nombre }}
+                        </h5>
+                        <small class="text-muted">
+                            <i class="bi bi-person-badge"></i>
+                            Juez: {{ equipo.juez_asignado.get_full_name|default:equipo.juez_asignado.username }}
+                        </small>
+                    </div>
+                    
+                    <!-- Estadísticas -->
+                    <div class="col-md-8">
+                        <div class="row text-center g-3">
+                            <div class="col-6 col-lg-3">
+                                <div class="p-3 bg-light rounded">
+                                    <small class="text-muted d-block mb-1">Mejor Tiempo</small>
+                                    {% if equipo.prefetched_tiempos %}
+                                        <strong class="text-success d-block">
+                                            {{ equipo.prefetched_tiempos.0.horas }}h 
+                                            {{ equipo.prefetched_tiempos.0.minutos }}m 
+                                            {{ equipo.prefetched_tiempos.0.segundos }}s
+                                        </strong>
+                                    {% else %}
+                                        <strong class="text-muted d-block">--</strong>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="p-3 bg-light rounded">
+                                    <small class="text-muted d-block mb-1">Registros</small>
+                                    <strong class="d-block">{{ equipo.num_registros }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="p-3 bg-light rounded">
+                                    <small class="text-muted d-block mb-1">Promedio</small>
+                                    {% if equipo.tiempo_promedio > 0 %}
+                                        <strong class="d-block">
+                                            {% widthratio equipo.tiempo_promedio 1000 1 %}.{% widthratio equipo.tiempo_promedio 100 1|stringformat:"d"|slice:"-1:" %}s
+                                        </strong>
+                                    {% else %}
+                                        <strong class="text-muted d-block">--</strong>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="p-3 bg-light rounded">
+                                    <small class="text-muted d-block mb-1">Tiempo Total</small>
+                                    <strong class="d-block">{{ equipo.tiempo_total_formateado }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <i class="bi bi-people"></i>
+            <h3>No hay equipos registrados</h3>
+            <p class="text-muted">Los equipos aparecerán aquí cuando sean asignados a la competencia</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'ui:competencia_list' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver a Competencias
+    </a>
+</div>
+{% endblock %}

@@ -313,9 +313,10 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
                     f'El equipo con ID {equipo_id} no pertenece a tu lista de equipos asignados'
                 )
             
-            # Crear el registro de tiempo
+            # Crear el registro de tiempo con la competencia
             registro = RegistroTiempo.objects.create(
                 equipo=equipo,
+                competencia=self.juez.competencia,  # Asignar la competencia del juez
                 tiempo=tiempo,
                 horas=horas,
                 minutos=minutos,

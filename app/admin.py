@@ -184,10 +184,10 @@ class EquipoAdmin(admin.ModelAdmin):
 
 @admin.register(RegistroTiempo)
 class RegistroTiempoAdmin(admin.ModelAdmin):
-    list_display = ['id_registro', 'equipo', 'tiempo_formateado', 'timestamp']
-    list_filter = ['equipo__juez_asignado__competencia', 'timestamp']
+    list_display = ['id_registro', 'equipo', 'competencia', 'tiempo_formateado', 'timestamp']
+    list_filter = ['competencia', 'equipo__juez_asignado__competencia', 'timestamp']
     search_fields = ['id_registro', 'equipo__nombre']
-    readonly_fields = ['id_registro', 'timestamp']
+    readonly_fields = ['id_registro', 'timestamp', 'competencia']
     
     def tiempo_formateado(self, obj):
         segundos = obj.tiempo / 1000
