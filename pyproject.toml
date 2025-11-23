@@ -23,6 +23,7 @@ dev = [
     "pytest",
     "pytest-django",
     "coverage",
+    "faker>=33.1.0",
 ]
 
 [project.scripts]

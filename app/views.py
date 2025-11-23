@@ -13,6 +13,7 @@ from django.db.models import Prefetch
 
 
 
+
 class LoginView(APIView):
     """
     Autenticación de jueces
@@ -62,9 +63,14 @@ class LoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Buscar el juez por username
+        # Buscar el juez por username o email
         try:
-           juez = Juez.objects.get(username__iexact=username)
+            # Intentar buscar por username primero
+            try:
+                juez = Juez.objects.get(username__iexact=username)
+            except Juez.DoesNotExist:
+                # Si no existe por username, buscar por email
+                juez = Juez.objects.get(email__iexact=username)
         except Juez.DoesNotExist:
             return Response(
                 {'error': 'Credenciales inválidas.'},
@@ -246,9 +252,14 @@ class CompetenciaViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         """
-        Permite filtrar competencias por activa y en_curso
+        Permite filtrar competencias por activa y en_curso.
+        Solo retorna la competencia del juez autenticado.
         """
         queryset = super().get_queryset()
+        
+        # Filtrar por la competencia del juez autenticado
+        juez = self.request.user
+        queryset = queryset.filter(id=juez.competencia_id)
         
         # Filtro por activa
         activa = self.request.query_params.get('activa')
@@ -321,22 +332,26 @@ class EquipoViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         """
-        Permite filtrar equipos por competencia_id y juez_id
+        Permite filtrar equipos por competencia_id y juez_id.
+        Solo retorna los equipos asignados al juez autenticado.
         """
         queryset = super().get_queryset()
         
-        # Filtro por competencia
+        # Filtrar por equipos asignados al juez autenticado
+        juez = self.request.user
+        queryset = queryset.filter(juez_asignado_id=juez.id)
+        
+        # Filtro por competencia (opcional, ya está filtrado por juez)
         competencia_id = self.request.query_params.get('competencia_id')
         if competencia_id:
             queryset = queryset.filter(juez_asignado__competencia_id=competencia_id)
         
-        # Filtro por juez
+        # Filtro por juez (opcional, redundante pero se mantiene para compatibilidad)
         juez_id = self.request.query_params.get('juez_id')
         if juez_id:
             queryset = queryset.filter(juez_asignado_id=juez_id)
         
         return queryset
-
 
 # --- Vistas HTML simples para UI local ---------------------------------
 def competencia_list_view(request):

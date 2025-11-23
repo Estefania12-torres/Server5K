@@ -25,13 +25,15 @@ SECRET_KEY = 'django-insecure-oos-2*p-=a6m$$jbs@_(7@9h!_r=tb5rj1v%n$ak#t94@_c-t^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['192.168.0.106', 'localhost']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',  # ← DEBE ESTAR PRIMERO para WebSocket support
+    'daphne', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,14 +45,14 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'channels',
-    'drf_spectacular',  # ← Documentación automática de API
+    'drf_spectacular',
     'app',
     'mensajeria',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ← Agregar WhiteNoise para archivos estáticos
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
