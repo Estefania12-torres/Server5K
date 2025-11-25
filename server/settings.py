@@ -274,7 +274,12 @@ LOGGING = {
     'loggers': {
         'app.websocket.consumers': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'app.websocket.validators': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': False,
         },
         'app.services': {
@@ -284,7 +289,7 @@ LOGGING = {
         },
         'django.channels': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
     },

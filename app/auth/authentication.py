@@ -21,7 +21,7 @@ class JuezJWTAuthentication(JWTAuthentication):
             if juez_id is None:
                 raise InvalidToken('Token no contiene juez_id')
             
-            juez = Juez.objects.get(id=juez_id, activo=True)
+            juez = Juez.objects.get(id=juez_id, is_active=True)
             return juez
         except Juez.DoesNotExist:
             raise InvalidToken('Juez no encontrado o inactivo')

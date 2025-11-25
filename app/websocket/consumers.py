@@ -9,6 +9,7 @@ Responsable de:
 """
 
 import urllib.parse
+import logging
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from .validators import (
@@ -18,6 +19,8 @@ from .validators import (
     validar_datos_registro,
     validar_datos_batch,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class JuezConsumer(AsyncJsonWebsocketConsumer):
@@ -43,58 +46,88 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
         params = urllib.parse.parse_qs(qs)
         token = params.get('token', [None])[0]
         
+        logger.info(f"Intento de conexión WebSocket")
+        logger.info(f" Query string: {qs[:100]}...")
+        logger.info(f" Token extraído: {token[:50] if token else 'None'}...")
+        
         if not token:
-            await self.close()
+            logger.error(" Token no proporcionado - Rechazando conexión")
+            await self.close(code=4001)
             return
 
         try:
             juez = await get_juez_from_token(token)
             if not juez:
-                await self.close()
+                logger.error(" Token inválido o juez no encontrado - Rechazando conexión")
+                await self.close(code=4002)
                 return
-        except Exception:
-            await self.close()
+            logger.info(f" Token válido - Juez: {juez.username} (ID: {juez.id})")
+        except Exception as e:
+            logger.error(f" Error validando token: {e}")
+            await self.close(code=4000)
             return
 
         self.juez = juez
 
         # Verificar que el juez_id de la URL coincida con el juez autenticado
         self.juez_id = str(self.scope['url_route']['kwargs'].get('juez_id'))
+        logger.info(f" Verificando juez_id - URL: {self.juez_id}, Token: {self.juez.id}")
+        
         if str(self.juez.id) != self.juez_id:
-            await self.close()
+            logger.error(f" Juez ID no coincide - URL: {self.juez_id}, Token: {self.juez.id}")
+            await self.close(code=4003)
             return
-
+        
+        logger.info(" Juez ID coincide")
         # Verificar que la competencia esté activa
+        logger.info(" Verificando competencia activa...")
         competencia_activa = await verificar_competencia_activa(self.juez)
         if not competencia_activa:
-            await self.close()
+            logger.error(f" Juez {self.juez_id} no tiene competencia activa")
+            await self.close(code=4004)
             return
-
+        
+        logger.info("✅ Competencia activa verificada")
+        
         # Unirse al grupo del juez y al grupo de la competencia
         self.group_name = f'juez_{self.juez_id}'
         
-        # Obtener competencia_id del equipo asignado al juez
-        competencia_id = None
-        # Obtener competencia_id del primer equipo del juez
-        equipo = self.juez.teams.select_related('competition').first()
-        if equipo:
-            competencia_id = equipo.competition_id
+        # Obtener competencia_id del equipo asignado al juez (async)
+        competencia_id = await self.get_competencia_id_del_juez()
         
         if competencia_id:
             self.competencia_group = f'competencia_{competencia_id}'
             await self.channel_layer.group_add(self.competencia_group, self.channel_name)
+            logger.info(f"📢 Juez {self.juez_id} unido al grupo {self.competencia_group}")
         
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         
+        logger.info(f" Aceptando conexión WebSocket para juez {self.juez_id}")
         await self.accept()
         
         # Enviar estado de la competencia al conectar
         estado_competencia = await obtener_estado_competencia(self.juez)
+        logger.info(f" Enviando estado inicial - Competencia: {estado_competencia}")
         await self.send_json({
             'tipo': 'conexion_establecida',
             'mensaje': 'Conectado exitosamente',
             'competencia': estado_competencia
         })
+        
+        logger.info(f"✅✅✅ Conexión WebSocket establecida exitosamente para juez {self.juez.username} (ID: {self.juez_id})")
+
+    @database_sync_to_async
+    def get_competencia_id_del_juez(self):
+        """
+        Obtiene el ID de la competencia del primer equipo del juez.
+        Debe ser async porque accede a la base de datos.
+        """
+        equipo = self.juez.teams.select_related('competition').first()
+        if equipo:
+            logger.debug(f"🔍 Equipo encontrado: {equipo.name} - Competencia: {equipo.competition.name}")
+            return equipo.competition_id
+        logger.warning(f"⚠️ Juez {self.juez_id} no tiene equipos asignados")
+        return None
 
     async def disconnect(self, close_code):
         """
@@ -114,6 +147,7 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
         Mensajes soportados:
         1. registrar_tiempo: Registra el tiempo de llegada de un equipo
         2. registrar_tiempos: Registra múltiples tiempos en batch
+        3. ping: Mantiene la conexión viva (heartbeat)
         """
         tipo = content.get('tipo')
         
@@ -121,6 +155,12 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
             await self.manejar_registro_tiempo(content)
         elif tipo == 'registrar_tiempos':
             await self.manejar_registro_tiempos_batch(content)
+        elif tipo == 'ping':
+            # Responder al heartbeat
+            await self.send_json({
+                'tipo': 'pong',
+                'mensaje': 'Conexión activa'
+            })
         else:
             # Mensaje no reconocido
             await self.send_json({
@@ -281,36 +321,56 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
     async def competencia_iniciada(self, event):
         """
         Notifica al cliente que la competencia ha iniciado.
-        Ahora puede enviar registros de tiempos.
         """
-        await self.send_json({
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"🔔 MÉTODO competencia_iniciada EJECUTADO para juez {self.juez_id}")
+        logger.info(f"   Event recibido: {event}")
+        
+        data = event.get('data', {})
+        
+        mensaje_a_enviar = {
             'tipo': 'competencia_iniciada',
-            'mensaje': event['data']['mensaje'],
+            'mensaje': data.get('mensaje', 'La competencia ha iniciado'),
             'competencia': {
-                'id': event['data']['competencia_id'],
-                'nombre': event['data']['competencia_nombre'],
-                'en_curso': event['data']['en_curso'],
+                'id': data.get('competencia_id'),
+                'nombre': data.get('competencia_nombre'),
+                'en_curso': data.get('en_curso', True),
             }
-        })
+        }
+        
+        logger.info(f"   📤 Enviando al cliente: {mensaje_a_enviar}")
+        
+        await self.send_json(mensaje_a_enviar)
+        
+        logger.info(f"   ✅ Mensaje enviado exitosamente al juez {self.juez_id}")
+        
     
     async def competencia_detenida(self, event):
         """
         Notifica al cliente que la competencia ha finalizado.
-        Ya no puede enviar más registros de tiempos.
         """
-        await self.send_json({
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"🔔 MÉTODO competencia_detenida EJECUTADO para juez {self.juez_id}")
+        logger.info(f"   Event recibido: {event}")
+        
+        data = event.get('data', {})
+        
+        mensaje_a_enviar = {
             'tipo': 'competencia_detenida',
-            'mensaje': event['data']['mensaje'],
+            'mensaje': data.get('mensaje', 'La competencia ha finalizado'),
             'competencia': {
-                'id': event['data']['competencia_id'],
-                'nombre': event['data']['competencia_nombre'],
-                'en_curso': event['data']['en_curso'],
+                'id': data.get('competencia_id'),
+                'nombre': data.get('competencia_nombre'),
+                'en_curso': data.get('en_curso', False),
             }
-        })
-
-    async def carrera_iniciada(self, event):
-        """Mantener compatibilidad con código antiguo"""
-        await self.send_json({
-            'type': 'carrera.iniciada',
-            'data': event.get('data', {})
-        })
+        }
+        
+        logger.info(f"   📤 Enviando al cliente: {mensaje_a_enviar}")
+        
+        await self.send_json(mensaje_a_enviar)
+        
+        logger.info(f"   ✅ Mensaje enviado exitosamente al juez {self.juez_id}")

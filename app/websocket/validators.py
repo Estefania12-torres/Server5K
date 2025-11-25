@@ -3,8 +3,11 @@ Módulo: validators
 Funciones de validación para conexiones WebSocket y mensajes entrantes.
 """
 
+import logging
 from channels.db import database_sync_to_async
 from rest_framework_simplejwt.tokens import AccessToken
+
+logger = logging.getLogger(__name__)
 
 
 @database_sync_to_async
@@ -21,17 +24,26 @@ def get_juez_from_token(token):
     from app.models import Juez
     
     try:
+        logger.debug(f"🔍 Validando token JWT...")
         # Validar el token
         access_token = AccessToken(token)
         juez_id = access_token.get('juez_id')
         
+        logger.debug(f"🔍 Token decodificado - juez_id: {juez_id}")
+        
         if not juez_id:
+            logger.error("❌ Token no contiene juez_id")
             return None
         
-        # Obtener el juez con su equipo asignado (select_related para optimizar)
-        juez = Juez.objects.select_related('team', 'team__competition').get(id=juez_id, is_active=True)
+        # Obtener el juez con sus equipos (prefetch_related para optimizar)
+        juez = Juez.objects.prefetch_related('teams', 'teams__competition').get(id=juez_id, is_active=True)
+        logger.info(f"✅ Juez encontrado: {juez.username} (ID: {juez.id})")
         return juez
-    except Exception:
+    except Juez.DoesNotExist:
+        logger.error(f"❌ Juez con ID {juez_id} no existe o está inactivo")
+        return None
+    except Exception as e:
+        logger.error(f"❌ Error validando token: {e}")
         return None
 
 
@@ -46,7 +58,9 @@ def verificar_competencia_activa(juez):
     Returns:
         bool: True si la competencia está activa, False en caso contrario
     """
-    return juez.teams.filter(competition__is_active=True).exists()
+    tiene_competencia = juez.teams.filter(competition__is_active=True).exists()
+    logger.debug(f"🔍 Juez {juez.id} tiene competencia activa: {tiene_competencia}")
+    return tiene_competencia
 
 
 @database_sync_to_async

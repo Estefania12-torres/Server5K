@@ -32,4 +32,10 @@ class Juez(models.Model):
 
     @property
     def is_authenticated(self):
+        """Indica que el juez está autenticado cuando se usa como 'user'"""
         return True
+    
+    @property
+    def is_anonymous(self):
+        """Indica que el juez no es anónimo"""
+        return False

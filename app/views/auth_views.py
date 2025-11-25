@@ -58,7 +58,7 @@ class LoginView(APIView):
         
         username = request.data.get('username')
         password = request.data.get('password')
-
+        
         if not username or not password:
             return Response(
                 {'error': 'Se requiere username y password.'},
@@ -68,7 +68,7 @@ class LoginView(APIView):
         juez = None
         try:
             juez = Juez.objects.filter(
-                activo=True 
+                is_active=True 
             ).filter(
                 Q(username__iexact=username) | Q(email__iexact=username)
             ).first()
