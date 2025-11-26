@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '10.20.142.229',  # IP alternativa de la PC servidor
+    '192.168.0.190',  # IP alternativa de la PC servidor
 ]
 
 
