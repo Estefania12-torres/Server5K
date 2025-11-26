@@ -161,7 +161,38 @@ class MeView(APIView):
 class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        summary="Refrescar token de acceso",
+        description="Genera un nuevo access token usando el refresh token. El refresh token permanece válido.",
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'refresh': {'type': 'string', 'example': 'eyJ0eXAiOiJKV1QiLCJhbGc...'},
+                },
+                'required': ['refresh']
+            }
+        },
+        responses={
+            200: {
+                'description': 'Token refrescado exitosamente',
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'access': 'eyJ0eXAiOiJKV1QiLCJhbGc...',
+                            'message': 'Token refrescado exitosamente'
+                        }
+                    }
+                }
+            },
+            400: {'description': 'Refresh token no proporcionado'},
+            401: {'description': 'Refresh token inválido o expirado'},
+        },
+        tags=['Autenticación']
+    )
     def post(self, request):
+        from app.models import Juez
+        
         try:
             refresh_token = request.data.get('refresh')
             if not refresh_token:
@@ -173,6 +204,27 @@ class RefreshTokenView(APIView):
             # Crear objeto RefreshToken y obtener nuevo access token
             token = RefreshToken(refresh_token)
             
+            # Obtener información del juez del refresh token
+            juez_id = token.get('juez_id')
+            if juez_id:
+                try:
+                    juez = Juez.objects.get(id=juez_id, is_active=True)
+                    # Agregar claims personalizados al nuevo access token
+                    access_token = token.access_token
+                    access_token['juez_id'] = juez.id
+                    access_token['username'] = juez.username
+                    
+                    return Response({
+                        'access': str(access_token),
+                        'message': 'Token refrescado exitosamente'
+                    }, status=status.HTTP_200_OK)
+                except Juez.DoesNotExist:
+                    return Response(
+                        {'error': 'Juez no encontrado o inactivo.'},
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+            
+            # Fallback si no hay juez_id en el token
             return Response({
                 'access': str(token.access_token),
                 'message': 'Token refrescado exitosamente'
