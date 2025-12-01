@@ -1,19 +1,10 @@
 from django.db import models
 from django.utils import timezone
 
-CATEGORIA_CHOICES = [
-    ('estudiantes', 'Estudiantes por Equipos'),
-    ('interfacultades', 'Interfacultades por Equipos'),
-]
 
 class Competencia(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nombre")
     datetime = models.DateTimeField(verbose_name="Fecha y hora")
-    category = models.CharField(
-        max_length=20,
-        choices=CATEGORIA_CHOICES,
-        verbose_name="Categoría",
-    )
 
     is_active = models.BooleanField(default=True, verbose_name="Activa")
     is_running = models.BooleanField(default=False, verbose_name="En curso")

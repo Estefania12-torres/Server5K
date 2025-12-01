@@ -1,8 +1,20 @@
 from django.db import models
 
+CATEGORIA_CHOICES = [
+    ('estudiantes', 'Estudiantes por Equipos'),
+    ('interfacultades', 'Interfacultades por Equipos'),
+]
+
+
 class Equipo(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nombre")
     number = models.PositiveIntegerField(verbose_name="Dorsal")
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORIA_CHOICES,
+        default='estudiantes',
+        verbose_name="Categoría",
+    )
 
     competition = models.ForeignKey(
         'Competencia',

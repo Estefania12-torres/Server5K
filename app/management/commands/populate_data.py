@@ -30,7 +30,6 @@ class Command(BaseCommand):
         competencia = Competencia.objects.create(
             name=f"5K {fake.city()} {timezone.now().year}",
             datetime=fake.date_time_between(start_date='now', end_date='+30d', tzinfo=timezone.get_current_timezone()),
-            category=random.choice(['estudiantes', 'interfacultades']),
             is_active=True,
             is_running=False
         )
@@ -89,6 +88,7 @@ class Command(BaseCommand):
             equipo = Equipo.objects.create(
                 name=nombre_equipo,
                 number=dorsal,
+                category=random.choice(['estudiantes', 'interfacultades']),
                 competition=competencia,
                 judge=juez
             )
@@ -100,7 +100,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('RESUMEN DE DATOS GENERADOS'))
         self.stdout.write(self.style.SUCCESS('='*60))
         self.stdout.write(f'Competencia: {competencia.name}')
-        self.stdout.write(f'Categoría: {competencia.get_category_display()}')
         self.stdout.write(f'Fecha: {competencia.datetime.strftime("%d/%m/%Y %H:%M")}')
         self.stdout.write(f'Total de Jueces: {Juez.objects.count()}')
         self.stdout.write(f'Total de Equipos: {Equipo.objects.filter(competition=competencia).count()}')

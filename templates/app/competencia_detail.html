@@ -27,12 +27,6 @@
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
             <div>
-                <div class="stats-label">Categoría</div>
-                <span class="badge badge-primary" style="font-size: 0.813rem;">
-                    {{ competencia.get_category_display }}
-                </span>
-            </div>
-            <div>
                 <div class="stats-label">Fecha y Hora</div>
                 <strong style="font-size: 0.875rem; color: var(--text-primary);">
                     {{ competencia.datetime|date:"d M Y, H:i" }}
@@ -141,6 +135,10 @@
                     </div>
                     
                     <div style="display: flex; gap: 0.875rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.375rem; color: var(--text-secondary); font-size: 0.813rem;">
+                            <i class="bi-tag"></i>
+                            <span>{{ equipo.get_category_display }}</span>
+                        </div>
                         <div style="display: flex; align-items: center; gap: 0.375rem; color: var(--text-secondary); font-size: 0.813rem;">
                             <i class="bi-person-badge"></i>
                             <span>{{ equipo.judge.get_full_name|default:equipo.judge.username }}</span>

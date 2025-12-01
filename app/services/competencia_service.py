@@ -201,7 +201,6 @@ class CompetenciaService:
                 'competencia': {
                     'id': competencia.id,
                     'name': competencia.name,
-                    'category': competencia.category,
                     'is_active': competencia.is_active,
                     'is_running': competencia.is_running,
                     'started_at': competencia.started_at.isoformat() if competencia.started_at else None,

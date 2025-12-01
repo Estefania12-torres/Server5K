@@ -32,7 +32,7 @@ class EstadoCompetenciaFilter(admin.SimpleListFilter):
 class EquipoInline(admin.TabularInline):
     model = Equipo
     extra = 0
-    fields = ['number', 'name', 'judge', 'num_registros_display']
+    fields = ['number', 'name', 'category', 'judge', 'num_registros_display']
     readonly_fields = ['num_registros_display']
 
     def num_registros_display(self, obj):
@@ -66,14 +66,13 @@ class CompetenciaAdmin(admin.ModelAdmin):
     list_display = [
         'name',
         'datetime',
-        'category',
         'get_status_display',
         'total_equipos',
         'total_registros',
         'is_active',
         'acciones_competencia',
     ]
-    list_filter = [EstadoCompetenciaFilter, 'category', 'is_active']
+    list_filter = [EstadoCompetenciaFilter, 'is_active']
     search_fields = ['name']
     readonly_fields = ['started_at', 'finished_at']
     list_per_page = 25
@@ -84,7 +83,7 @@ class CompetenciaAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Información General', {
-            'fields': ('name', 'datetime', 'category', 'is_active')
+            'fields': ('name', 'datetime', 'is_active')
         }),
         ('Estado de la Competencia', {
             'fields': ('is_running', 'started_at', 'finished_at'),
@@ -269,8 +268,8 @@ class CompetenciaAdmin(admin.ModelAdmin):
 
 @admin.register(Equipo)
 class EquipoAdmin(admin.ModelAdmin):
-    list_display = ['number', 'name', 'competition', 'judge', 'num_registros', 'ver_resultados']
-    list_filter = ['competition', 'judge']
+    list_display = ['number', 'name', 'category', 'competition', 'judge', 'num_registros', 'ver_resultados']
+    list_filter = ['competition', 'category', 'judge']
     search_fields = ['name', 'number']
     inlines = [RegistroTiempoInline]
     list_select_related = ['competition', 'judge']

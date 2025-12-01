@@ -11,7 +11,6 @@ class CompetenciaSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'datetime',
-            'category',
             'is_active',
             'is_running',
             'started_at',
@@ -46,6 +45,7 @@ class EquipoSerializer(serializers.ModelSerializer):
     judge_username = serializers.CharField(source='judge.username', read_only=True)
     competition_id = serializers.IntegerField(source='competition.id', read_only=True)
     competition_name = serializers.CharField(source='competition.name', read_only=True)
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
     
     class Meta:
         model = Equipo
@@ -53,11 +53,13 @@ class EquipoSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'number',
+            'category',
+            'category_display',
             'competition_id',
             'competition_name',
             'judge_username',
         ]
-        read_only_fields = ['id', 'competition_id', 'competition_name', 'judge_username']
+        read_only_fields = ['id', 'competition_id', 'competition_name', 'judge_username', 'category_display']
 
 
 class RegistroTiempoSerializer(serializers.ModelSerializer):
