@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ equipo.name }} - Registros{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" style="margin-bottom: 1.5rem;">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'ui:competencia_list' %}">
+                <i class="bi-house"></i> Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'ui:competencia_detail' competencia.pk %}">
+                {{ competencia.name }}
+            </a>
+        </li>
+        <li class="breadcrumb-item active">{{ equipo.name }}</li>
+    </ol>
+</nav>
+
+<!-- Header del Equipo -->
+<div class="card mb-4">
+    <div class="card-body" style="padding: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+            <span class="badge badge-primary" style="font-size: 1.25rem; padding: 0.5rem 1rem;">
+                #{{ equipo.number }}
+            </span>
+            <div>
+                <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700;">
+                    {{ equipo.name }}
+                </h2>
+                <div style="display: flex; gap: 1rem; margin-top: 0.375rem; flex-wrap: wrap;">
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                        <i class="bi-tag"></i> {{ equipo.get_category_display }}
+                    </span>
+                    {% if equipo.judge %}
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                        <i class="bi-person-badge"></i> {{ equipo.judge.get_full_name|default:equipo.judge.username }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas del Equipo -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem;">
+            <div class="stats-box" style="padding: 1rem; text-align: center;">
+                <div class="stats-label">Total Registros</div>
+                <div class="stats-value" style="font-size: 1.5rem;">{{ total_registros }}</div>
+            </div>
+            <div class="stats-box" style="padding: 1rem; text-align: center; background: linear-gradient(135deg, #dcfce7 0%, #ffffff 100%); border-color: var(--success);">
+                <div class="stats-label">✓ Completados</div>
+                <div class="stats-value text-success" style="font-size: 1.5rem;">{{ jugadores_completados }}</div>
+            </div>
+            {% if jugadores_ausentes > 0 %}
+            <div class="stats-box" style="padding: 1rem; text-align: center; background: linear-gradient(135deg, #fee2e2 0%, #ffffff 100%); border-color: var(--danger);">
+                <div class="stats-label">✗ Ausentes</div>
+                <div class="stats-value text-danger" style="font-size: 1.5rem;">{{ jugadores_ausentes }}</div>
+            </div>
+            {% endif %}
+            <div class="stats-box" style="padding: 1rem; text-align: center; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); border-color: var(--warning);">
+                <div class="stats-label">⚡ Mejor Tiempo</div>
+                <div class="stats-value text-warning" style="font-size: 1.25rem;">{{ mejor_tiempo_formateado }}</div>
+            </div>
+            <div class="stats-box" style="padding: 1rem; text-align: center; background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%); border-color: var(--primary); border-width: 2px;">
+                <div class="stats-label">🏁 Tiempo Total</div>
+                <div class="stats-value" style="color: var(--primary); font-size: 1.25rem;">{{ tiempo_total_formateado }}</div>
+            </div>
+            {% if peor_tiempo_formateado != "00:00:00" %}
+            <div class="stats-box" style="padding: 1rem; text-align: center;">
+                <div class="stats-label">🐢 Peor Tiempo</div>
+                <div class="stats-value text-muted" style="font-size: 1.25rem;">{{ peor_tiempo_formateado }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Registros -->
+<div class="card">
+    <div class="card-body" style="padding: 1.5rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi-stopwatch" style="color: var(--primary);"></i>
+            Registros de Tiempo
+        </h3>
+
+        {% if registros %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 0.75rem; text-align: left; font-size: 0.813rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+                            #
+                        </th>
+                        <th style="padding: 0.75rem; text-align: left; font-size: 0.813rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+                            Tiempo
+                        </th>
+                        <th style="padding: 0.75rem; text-align: left; font-size: 0.813rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+                            Desglose
+                        </th>
+                        <th style="padding: 0.75rem; text-align: left; font-size: 0.813rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+                            Estado
+                        </th>
+                        <th style="padding: 0.75rem; text-align: right; font-size: 0.813rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+                            Registrado
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registro in registros %}
+                    <tr style="border-bottom: 1px solid var(--border); {% if registro.time == 0 %}background-color: #fef2f2;{% endif %}">
+                        <td style="padding: 0.875rem 0.75rem;">
+                            <span style="font-weight: 600; color: var(--text-primary);">{{ forloop.counter }}</span>
+                        </td>
+                        <td style="padding: 0.875rem 0.75rem;">
+                            {% if registro.time == 0 %}
+                                <span style="color: var(--danger); font-weight: 600;">AUSENTE</span>
+                            {% else %}
+                                <span style="font-family: 'Courier New', monospace; font-size: 1rem; font-weight: 700; color: var(--text-primary);">
+                                    {{ registro.tiempo_formateado }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.875rem 0.75rem;">
+                            {% if registro.time > 0 %}
+                            <span style="font-size: 0.813rem; color: var(--text-secondary);">
+                                {{ registro.hours }}h {{ registro.minutes }}m {{ registro.seconds }}s {{ registro.milliseconds }}ms
+                            </span>
+                            {% else %}
+                            <span style="font-size: 0.813rem; color: var(--text-muted);">--</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.875rem 0.75rem;">
+                            {% if registro.time == 0 %}
+                                <span class="badge badge-danger" style="font-size: 0.75rem;">
+                                    ❌ Ausente
+                                </span>
+                            {% else %}
+                                <span class="badge badge-success" style="font-size: 0.75rem;">
+                                    ✓ Completado
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.875rem 0.75rem; text-align: right;">
+                            <span style="font-size: 0.813rem; color: var(--text-secondary);">
+                                {{ registro.created_at|date:"d/m/Y H:i" }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 2.5rem 2rem;">
+            <i class="bi-stopwatch" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--text-secondary); font-weight: 600; font-size: 1.125rem; margin-bottom: 0.5rem;">
+                Sin registros de tiempo
+            </h3>
+            <p class="text-muted" style="font-size: 0.875rem;">
+                Los registros aparecerán aquí cuando el juez los envíe
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="margin-top: 1.5rem;">
+    <a href="{% url 'ui:competencia_detail' competencia.pk %}" class="btn btn-secondary">
+        <i class="bi-arrow-left"></i> Volver a la Competencia
+    </a>
+</div>
+{% endblock %}

@@ -6,7 +6,7 @@ Contiene todas las vistas de la API organizadas por funcionalidad.
 from .auth_views import LoginView, LogoutView, MeView, RefreshTokenView
 from .competencia_views import CompetenciaViewSet
 from .equipo_views import EquipoViewSet
-from .html_views import competencia_list_view, competencia_detail_view
+from .html_views import competencia_list_view, competencia_detail_view, equipo_detail_view
 from .admin_views import EstadoCompetenciaAdminView
 
 __all__ = [
@@ -18,5 +18,6 @@ __all__ = [
     'EquipoViewSet',
     'competencia_list_view',
     'competencia_detail_view',
+    'equipo_detail_view',
     'EstadoCompetenciaAdminView',
 ]
