@@ -145,21 +145,26 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
         Maneja mensajes JSON del cliente.
         
         Mensajes soportados:
-        1. registrar_tiempo: Registra el tiempo de llegada de un equipo
-        2. registrar_tiempos: Registra múltiples tiempos en batch
-        3. ping: Mantiene la conexión viva (heartbeat)
+        1. ping: Mantiene la conexión viva (heartbeat)
+        
+        NOTA: Los registros de tiempo ahora se envían por HTTP POST
+        a /api/equipos/{id}/registros/ para mayor confiabilidad.
+        El WebSocket solo se usa para notificaciones en tiempo real.
         """
         tipo = content.get('tipo')
         
-        if tipo == 'registrar_tiempo':
-            await self.manejar_registro_tiempo(content)
-        elif tipo == 'registrar_tiempos':
-            await self.manejar_registro_tiempos_batch(content)
-        elif tipo == 'ping':
+        if tipo == 'ping':
             # Responder al heartbeat
             await self.send_json({
                 'tipo': 'pong',
                 'mensaje': 'Conexión activa'
+            })
+        elif tipo == 'registrar_tiempo' or tipo == 'registrar_tiempos':
+            # Informar al cliente que debe usar HTTP
+            await self.send_json({
+                'tipo': 'error',
+                'mensaje': 'Los registros ahora se envían por HTTP POST a /api/equipos/{id}/registros/',
+                'usar_http': True
             })
         else:
             # Mensaje no reconocido
@@ -358,8 +363,8 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
         import logging
         logger = logging.getLogger(__name__)
         
-        logger.info(f"🔔 MÉTODO competencia_detenida EJECUTADO para juez {self.juez_id}")
-        logger.info(f"   Event recibido: {event}")
+        logger.info(f"  MÉTODO competencia_detenida EJECUTADO para juez {self.juez_id}")
+        logger.info(f"  Event recibido: {event}")
         
         data = event.get('data', {})
         
@@ -375,8 +380,36 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
             }
         }
         
-        logger.info(f"   📤 Enviando al cliente: {mensaje_a_enviar}")
+        logger.info(f"  Enviando al cliente: {mensaje_a_enviar}")
         
         await self.send_json(mensaje_a_enviar)
         
-        logger.info(f"   ✅ Mensaje enviado exitosamente al juez {self.juez_id}")
+        logger.info(f"  Mensaje enviado exitosamente al juez {self.juez_id}")
+
+    async def registros_actualizados(self, event):
+        """
+        Notifica al cliente que hay nuevos registros de tiempo.
+        Este evento se dispara cuando se guardan registros por HTTP.
+        Permite actualizar la UI en tiempo real.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"MÉTODO registros_actualizados EJECUTADO para juez {self.juez_id}")
+        
+        data = event.get('data', {})
+        
+        mensaje_a_enviar = {
+            'tipo': 'registros_actualizados',
+            'equipo': {
+                'id': data.get('equipo_id'),
+                'nombre': data.get('equipo_nombre'),
+                'dorsal': data.get('equipo_dorsal'),
+            },
+            'total_registros': data.get('total_registros'),
+            'tiempo_total': data.get('tiempo_total'),
+        }
+        
+        await self.send_json(mensaje_a_enviar)
+        
+        logger.info(f"   Notificación de registros enviada al juez {self.juez_id}")

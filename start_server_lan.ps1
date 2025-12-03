@@ -50,8 +50,8 @@ Write-Host ""
 # ============================================================================
 Write-Host "🌐 [2/6] Verificando configuración de red..." -ForegroundColor Cyan
 
-$ipAddress = "192.168.0.190"  # IP configurada en ALLOWED_HOSTS
-# $ipAddress = "192.168.0.108"  # IP configurada en ALLOWED_HOSTS
+# $ipAddress = "192.168.0.190"  # IP configurada en ALLOWED_HOSTS
+$ipAddress = "192.168.0.108"  # IP configurada en ALLOWED_HOSTS
 
 $networkAdapter = Get-NetIPAddress -AddressFamily IPv4 -IPAddress $ipAddress -ErrorAction SilentlyContinue
 
