@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -97,7 +98,7 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             'hosts': [('127.0.0.1', 6379)],  # Redis en Docker (redis-dev)
-            'capacity': 2000,      # Capacidad para ~20 dispositivos × 100 mensajes
+            'capacity': 10000,     # Capacidad para ~100 dispositivos × 100 mensajes
             'expiry': 60,          # Los mensajes expiran después de 60 segundos
             'prefix': 'server5k',  # Prefijo para keys de Redis
         },
@@ -111,12 +112,31 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Base SQLite por defecto para desarrollo local.
+# Para concurrencia real, permite Postgres vía variables de entorno.
+if os.getenv('POSTGRES_DB'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB'),
+            'USER': os.getenv('POSTGRES_USER', ''),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+            'CONN_MAX_AGE': 60,  # pool de conexiones para más throughput
+            'OPTIONS': {
+                'sslmode': os.getenv('POSTGRES_SSLMODE', 'prefer'),
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'CONN_MAX_AGE': 0,  # SQLite no soporta pool; mantiene compatibilidad
+        }
+    }
 
 
 # Password validation

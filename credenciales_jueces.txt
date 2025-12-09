@@ -1,356 +1,356 @@
 ======================================================================
 CREDENCIALES DE ACCESO - SISTEMA 5K
-Generado: 04/12/2025 14:30:03
-Competencia: 5K Castellón 2025
+Generado: 09/12/2025 05:21:13
+Competencia: 5K Córdoba 2025
 ======================================================================
 
 JUEZ #01
-  Nombre: Borja Iglesia
+  Nombre: Úrsula Águila
   Usuario: juez1
-  Email: borja.iglesia@gmail.com
+  Email: ursula.aguila@gmail.com
   Contraseña: juez1123
 ----------------------------------------------------------------------
 
 JUEZ #02
-  Nombre: José Mari Sosa
+  Nombre: Galo Lerma
   Usuario: juez2
-  Email: josemari.sosa@gmail.com
+  Email: galo.lerma@gmail.com
   Contraseña: juez2123
 ----------------------------------------------------------------------
 
 JUEZ #03
-  Nombre: Aurelia Nicolau
+  Nombre: Moreno Otero
   Usuario: juez3
-  Email: aurelia.nicolau@gmail.com
+  Email: moreno.otero@gmail.com
   Contraseña: juez3123
 ----------------------------------------------------------------------
 
 JUEZ #04
-  Nombre: Gilberto Diaz
+  Nombre: Cristóbal Cobos
   Usuario: juez4
-  Email: gilberto.diaz@gmail.com
+  Email: cristobal.cobos@gmail.com
   Contraseña: juez4123
 ----------------------------------------------------------------------
 
 JUEZ #05
-  Nombre: Florentino Cases
+  Nombre: Noelia Diez
   Usuario: juez5
-  Email: florentino.cases@gmail.com
+  Email: noelia.diez@gmail.com
   Contraseña: juez5123
 ----------------------------------------------------------------------
 
 JUEZ #06
-  Nombre: Ruy Marin
+  Nombre: Fidela Chaparro
   Usuario: juez6
-  Email: ruy.marin@gmail.com
+  Email: fidela.chaparro@gmail.com
   Contraseña: juez6123
 ----------------------------------------------------------------------
 
 JUEZ #07
-  Nombre: Bartolomé Navarro
+  Nombre: Judith Jaén
   Usuario: juez7
-  Email: bartolome.navarro@gmail.com
+  Email: judith.jaen@gmail.com
   Contraseña: juez7123
 ----------------------------------------------------------------------
 
 JUEZ #08
-  Nombre: Cecilio Monreal
+  Nombre: Samanta Corbacho
   Usuario: juez8
-  Email: cecilio.monreal@gmail.com
+  Email: samanta.corbacho@gmail.com
   Contraseña: juez8123
 ----------------------------------------------------------------------
 
 JUEZ #09
-  Nombre: Ulises Casals
+  Nombre: Lino Dominguez
   Usuario: juez9
-  Email: ulises.casals@gmail.com
+  Email: lino.dominguez@gmail.com
   Contraseña: juez9123
 ----------------------------------------------------------------------
 
 JUEZ #10
-  Nombre: Bibiana Saez
+  Nombre: Borja Sarmiento
   Usuario: juez10
-  Email: bibiana.saez@gmail.com
+  Email: borja.sarmiento@gmail.com
   Contraseña: juez10123
 ----------------------------------------------------------------------
 
 JUEZ #11
-  Nombre: Concha Galván
+  Nombre: Ángeles Royo
   Usuario: juez11
-  Email: concha.galvan@gmail.com
+  Email: angeles.royo@gmail.com
   Contraseña: juez11123
 ----------------------------------------------------------------------
 
 JUEZ #12
-  Nombre: Natalio Amaya
+  Nombre: Juan Francisco Castellanos
   Usuario: juez12
-  Email: natalio.amaya@gmail.com
+  Email: juanfrancisco.castellanos@gmail.com
   Contraseña: juez12123
 ----------------------------------------------------------------------
 
 JUEZ #13
-  Nombre: Yésica Cuadrado
+  Nombre: Dani Cardona
   Usuario: juez13
-  Email: yesica.cuadrado@gmail.com
+  Email: dani.cardona@gmail.com
   Contraseña: juez13123
 ----------------------------------------------------------------------
 
 JUEZ #14
-  Nombre: Gloria Jaén
+  Nombre: Pilar Paniagua
   Usuario: juez14
-  Email: gloria.jaen@gmail.com
+  Email: pilar.paniagua@gmail.com
   Contraseña: juez14123
 ----------------------------------------------------------------------
 
 JUEZ #15
-  Nombre: Jennifer Araujo
+  Nombre: Rico Montes
   Usuario: juez15
-  Email: jennifer.araujo@gmail.com
+  Email: rico.montes@gmail.com
   Contraseña: juez15123
 ----------------------------------------------------------------------
 
 JUEZ #16
-  Nombre: Eulalia Collado
+  Nombre: María Ángeles Porcel
   Usuario: juez16
-  Email: eulalia.collado@gmail.com
+  Email: mariaangeles.porcel@gmail.com
   Contraseña: juez16123
 ----------------------------------------------------------------------
 
 JUEZ #17
-  Nombre: Gabriela Rovira
+  Nombre: Tania Chacón
   Usuario: juez17
-  Email: gabriela.rovira@gmail.com
+  Email: tania.chacon@gmail.com
   Contraseña: juez17123
 ----------------------------------------------------------------------
 
 JUEZ #18
-  Nombre: Leticia Abella
+  Nombre: Jorge Torres
   Usuario: juez18
-  Email: leticia.abella@gmail.com
+  Email: jorge.torres@gmail.com
   Contraseña: juez18123
 ----------------------------------------------------------------------
 
 JUEZ #19
-  Nombre: Ofelia Oliva
+  Nombre: Perlita Mínguez
   Usuario: juez19
-  Email: ofelia.oliva@gmail.com
+  Email: perlita.minguez@gmail.com
   Contraseña: juez19123
 ----------------------------------------------------------------------
 
 JUEZ #20
-  Nombre: María Pilar Gelabert
+  Nombre: Irma Ayuso
   Usuario: juez20
-  Email: mariapilar.gelabert@gmail.com
+  Email: irma.ayuso@gmail.com
   Contraseña: juez20123
 ----------------------------------------------------------------------
 
 JUEZ #21
-  Nombre: Maite Daza
+  Nombre: Rosalva Miró
   Usuario: juez21
-  Email: maite.daza@gmail.com
+  Email: rosalva.miro@gmail.com
   Contraseña: juez21123
 ----------------------------------------------------------------------
 
 JUEZ #22
-  Nombre: Celestino Peña
+  Nombre: Cosme Valbuena
   Usuario: juez22
-  Email: celestino.pena@gmail.com
+  Email: cosme.valbuena@gmail.com
   Contraseña: juez22123
 ----------------------------------------------------------------------
 
 JUEZ #23
-  Nombre: Balduino Monreal
+  Nombre: Elisabet Múgica
   Usuario: juez23
-  Email: balduino.monreal@gmail.com
+  Email: elisabet.mugica@gmail.com
   Contraseña: juez23123
 ----------------------------------------------------------------------
 
 JUEZ #24
-  Nombre: Manolo Ríos
+  Nombre: María Perelló
   Usuario: juez24
-  Email: manolo.rios@gmail.com
+  Email: maria.perello@gmail.com
   Contraseña: juez24123
 ----------------------------------------------------------------------
 
 JUEZ #25
-  Nombre: Olivia Manrique
+  Nombre: Mateo Suarez
   Usuario: juez25
-  Email: olivia.manrique@gmail.com
+  Email: mateo.suarez@gmail.com
   Contraseña: juez25123
 ----------------------------------------------------------------------
 
 JUEZ #26
-  Nombre: Febe Álamo
+  Nombre: Roberta Vicente
   Usuario: juez26
-  Email: febe.alamo@gmail.com
+  Email: roberta.vicente@gmail.com
   Contraseña: juez26123
 ----------------------------------------------------------------------
 
 JUEZ #27
-  Nombre: Celestina Cabañas
+  Nombre: Candela Cabello
   Usuario: juez27
-  Email: celestina.cabanas@gmail.com
+  Email: candela.cabello@gmail.com
   Contraseña: juez27123
 ----------------------------------------------------------------------
 
 JUEZ #28
-  Nombre: Luisina Haro
+  Nombre: José Antonio Navarrete
   Usuario: juez28
-  Email: luisina.haro@gmail.com
+  Email: joseantonio.navarrete@gmail.com
   Contraseña: juez28123
 ----------------------------------------------------------------------
 
 JUEZ #29
-  Nombre: Teo Vicente
+  Nombre: Tristán Ortuño
   Usuario: juez29
-  Email: teo.vicente@gmail.com
+  Email: tristan.ortuno@gmail.com
   Contraseña: juez29123
 ----------------------------------------------------------------------
 
 JUEZ #30
-  Nombre: Jeremías Losa
+  Nombre: Cayetano Verdejo
   Usuario: juez30
-  Email: jeremias.losa@gmail.com
+  Email: cayetano.verdejo@gmail.com
   Contraseña: juez30123
 ----------------------------------------------------------------------
 
 JUEZ #31
-  Nombre: Adán Garmendia
+  Nombre: Aníbal Gutiérrez
   Usuario: juez31
-  Email: adan.garmendia@gmail.com
+  Email: anibal.gutierrez@gmail.com
   Contraseña: juez31123
 ----------------------------------------------------------------------
 
 JUEZ #32
-  Nombre: Sebastián Soriano
+  Nombre: Encarnita Molina
   Usuario: juez32
-  Email: sebastian.soriano@gmail.com
+  Email: encarnita.molina@gmail.com
   Contraseña: juez32123
 ----------------------------------------------------------------------
 
 JUEZ #33
-  Nombre: Ceferino Puente
+  Nombre: Julieta Nieto
   Usuario: juez33
-  Email: ceferino.puente@gmail.com
+  Email: julieta.nieto@gmail.com
   Contraseña: juez33123
 ----------------------------------------------------------------------
 
 JUEZ #34
-  Nombre: Camilo Rozas
+  Nombre: Antonio Granados
   Usuario: juez34
-  Email: camilo.rozas@gmail.com
+  Email: antonio.granados@gmail.com
   Contraseña: juez34123
 ----------------------------------------------------------------------
 
 JUEZ #35
-  Nombre: Lourdes Cabañas
+  Nombre: Telmo Rueda
   Usuario: juez35
-  Email: lourdes.cabanas@gmail.com
+  Email: telmo.rueda@gmail.com
   Contraseña: juez35123
 ----------------------------------------------------------------------
 
 JUEZ #36
-  Nombre: Felipa Martorell
+  Nombre: Estefanía Izquierdo
   Usuario: juez36
-  Email: felipa.martorell@gmail.com
+  Email: estefania.izquierdo@gmail.com
   Contraseña: juez36123
 ----------------------------------------------------------------------
 
 JUEZ #37
-  Nombre: Sancho Luján
+  Nombre: Fabio Blazquez
   Usuario: juez37
-  Email: sancho.lujan@gmail.com
+  Email: fabio.blazquez@gmail.com
   Contraseña: juez37123
 ----------------------------------------------------------------------
 
 JUEZ #38
-  Nombre: Joan Manzanares
+  Nombre: Vidal Pons
   Usuario: juez38
-  Email: joan.manzanares@gmail.com
+  Email: vidal.pons@gmail.com
   Contraseña: juez38123
 ----------------------------------------------------------------------
 
 JUEZ #39
-  Nombre: Francisco Javier Riquelme
+  Nombre: Serafina Lorenzo
   Usuario: juez39
-  Email: franciscojavier.riquelme@gmail.com
+  Email: serafina.lorenzo@gmail.com
   Contraseña: juez39123
 ----------------------------------------------------------------------
 
 JUEZ #40
-  Nombre: Sol Gil
+  Nombre: Edelmiro Esparza
   Usuario: juez40
-  Email: sol.gil@gmail.com
+  Email: edelmiro.esparza@gmail.com
   Contraseña: juez40123
 ----------------------------------------------------------------------
 
 JUEZ #41
-  Nombre: Rosalía Santos
+  Nombre: María Jesús Armengol
   Usuario: juez41
-  Email: rosalia.santos@gmail.com
+  Email: mariajesus.armengol@gmail.com
   Contraseña: juez41123
 ----------------------------------------------------------------------
 
 JUEZ #42
-  Nombre: Jonatan Porcel
+  Nombre: Pánfilo Pacheco
   Usuario: juez42
-  Email: jonatan.porcel@gmail.com
+  Email: panfilo.pacheco@gmail.com
   Contraseña: juez42123
 ----------------------------------------------------------------------
 
 JUEZ #43
-  Nombre: Sara Pelayo
+  Nombre: Jesusa Losada
   Usuario: juez43
-  Email: sara.pelayo@gmail.com
+  Email: jesusa.losada@gmail.com
   Contraseña: juez43123
 ----------------------------------------------------------------------
 
 JUEZ #44
-  Nombre: Remigio Flor
+  Nombre: Rosendo Pascual
   Usuario: juez44
-  Email: remigio.flor@gmail.com
+  Email: rosendo.pascual@gmail.com
   Contraseña: juez44123
 ----------------------------------------------------------------------
 
 JUEZ #45
-  Nombre: Febe Villa
+  Nombre: Marisa Trillo
   Usuario: juez45
-  Email: febe.villa@gmail.com
+  Email: marisa.trillo@gmail.com
   Contraseña: juez45123
 ----------------------------------------------------------------------
 
 JUEZ #46
-  Nombre: Abilio Gomila
+  Nombre: Teodosio Llobet
   Usuario: juez46
-  Email: abilio.gomila@gmail.com
+  Email: teodosio.llobet@gmail.com
   Contraseña: juez46123
 ----------------------------------------------------------------------
 
 JUEZ #47
-  Nombre: Gloria Sanabria
+  Nombre: Valerio Durán
   Usuario: juez47
-  Email: gloria.sanabria@gmail.com
+  Email: valerio.duran@gmail.com
   Contraseña: juez47123
 ----------------------------------------------------------------------
 
 JUEZ #48
-  Nombre: Nélida Rozas
+  Nombre: Juan Antonio Rebollo
   Usuario: juez48
-  Email: nelida.rozas@gmail.com
+  Email: juanantonio.rebollo@gmail.com
   Contraseña: juez48123
 ----------------------------------------------------------------------
 
 JUEZ #49
-  Nombre: Faustino Ribera
+  Nombre: Irene Andres
   Usuario: juez49
-  Email: faustino.ribera@gmail.com
+  Email: irene.andres@gmail.com
   Contraseña: juez49123
 ----------------------------------------------------------------------
 
 JUEZ #50
-  Nombre: Heraclio Carbajo
+  Nombre: Wálter Tirado
   Usuario: juez50
-  Email: heraclio.carbajo@gmail.com
+  Email: walter.tirado@gmail.com
   Contraseña: juez50123
 ----------------------------------------------------------------------
 

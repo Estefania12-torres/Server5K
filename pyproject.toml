@@ -18,6 +18,7 @@ dependencies = [
     "django-filter>=24.3",
     "aiohttp>=3.13.2",
     "rich>=14.2.0",
+    "psycopg[binary]>=3.1",
 ]
 
 [dependency-groups]

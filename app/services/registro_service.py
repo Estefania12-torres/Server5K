@@ -90,9 +90,7 @@ class RegistroService:
                         }
                 
                 # Contar registros actuales del equipo en esta competencia
-                num_registros = RegistroTiempo.objects.filter(
-                    team=equipo
-                ).count()
+                num_registros = RegistroTiempo.objects.filter(team=equipo).count()
                 
                 if num_registros >= self.MAX_REGISTROS_POR_EQUIPO:
                     return {
@@ -100,8 +98,8 @@ class RegistroService:
                         'error': f'El equipo ya completó sus {self.MAX_REGISTROS_POR_EQUIPO} registros. No se permiten registros adicionales.'
                     }
                 
-                # Crear el registro de tiempo (sin campo competencia, se obtiene via equipo)
-                registro = RegistroTiempo.objects.create(
+                # Construir registro y usar bulk_create con ignore_conflicts para idempotencia
+                registro = RegistroTiempo(
                     record_id=record_id or uuid.uuid4(),
                     team=equipo,
                     time=time,
@@ -111,9 +109,23 @@ class RegistroService:
                     milliseconds=milliseconds
                 )
                 
+                creados = RegistroTiempo.objects.bulk_create(
+                    [registro],
+                    ignore_conflicts=True  # si llega un UUID repetido no rompe la transacción
+                )
+                
+                if not creados:
+                    # Ya existía; devolver como duplicado
+                    existente = RegistroTiempo.objects.get(record_id=registro.record_id)
+                    return {
+                        'exito': True,
+                        'registro': existente,
+                        'duplicado': True
+                    }
+                
                 return {
                     'exito': True,
-                    'registro': registro,
+                    'registro': creados[0],
                     'duplicado': False
                 }
                 
@@ -123,8 +135,31 @@ class RegistroService:
                 'error': f'Error al guardar registro: {str(e)}'
             }
     
+    def registrar_batch_sync(
+        self,
+        juez,
+        equipo_id: int,
+        registros: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Versión SÍNCRONA de registrar_batch para uso desde vistas HTTP.
+        Evita problemas de conexión cuando se llama desde async_to_sync.
+        """
+        return self._registrar_batch_impl(juez, equipo_id, registros)
+    
     @database_sync_to_async
     def registrar_batch(
+        self,
+        juez,
+        equipo_id: int,
+        registros: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Versión ASÍNCRONA de registrar_batch para uso desde WebSocket.
+        """
+        return self._registrar_batch_impl(juez, equipo_id, registros)
+    
+    def _registrar_batch_impl(
         self,
         juez,
         equipo_id: int,
@@ -209,9 +244,7 @@ class RegistroService:
                     }
                 
                 # Contar registros actuales
-                num_registros_actuales = RegistroTiempo.objects.filter(
-                    team=equipo
-                ).count()
+                num_registros_actuales = RegistroTiempo.objects.filter(team=equipo).count()
                 
                 # Verificar si el equipo ya tiene registros (evitar envíos duplicados)
                 if num_registros_actuales > 0:
@@ -226,75 +259,66 @@ class RegistroService:
                         ]
                     }
                 
-                # Procesar cada registro
+                # Filtrar y normalizar datos válidos
+                registros_a_crear = []
+                mapping_idx_registro = []  # (indice_original, instancia_registro)
                 for idx, reg in enumerate(registros):
-                    try:
-                        # Verificar límite
-                        if num_registros_actuales >= self.MAX_REGISTROS_POR_EQUIPO:
-                            registros_fallidos.append({
-                                'indice': idx,
-                                'error': f'Se alcanzó el límite de {self.MAX_REGISTROS_POR_EQUIPO} registros'
-                            })
-                            continue
-                        
-                        time = reg.get('tiempo')
-                        hours = reg.get('horas', 0)
-                        minutes = reg.get('minutos', 0)
-                        seconds = reg.get('segundos', 0)
-                        milliseconds = reg.get('milisegundos', 0)
-                        record_id = reg.get('id_registro')
-                        
-                        if time is None:
-                            registros_fallidos.append({
-                                'indice': idx,
-                                'error': 'Falta el campo tiempo'
-                            })
-                            continue
-                        
-                        # Verificar idempotencia
-                        if record_id:
-                            registro_existente = RegistroTiempo.objects.filter(
-                                record_id=record_id
-                            ).first()
-                            
-                            if registro_existente:
-                                registros_guardados.append({
-                                    'indice': idx,
-                                    'id_registro': str(registro_existente.record_id),
-                                    'tiempo': registro_existente.time,
-                                    'duplicado': True
-                                })
-                                continue
-                        
-                        # Crear el registro (sin campo competencia)
-                        registro = RegistroTiempo.objects.create(
-                            record_id=record_id or uuid.uuid4(),
-                            team=equipo,
-                            time=time,
-                            hours=hours,
-                            minutes=minutes,
-                            seconds=seconds,
-                            milliseconds=milliseconds
-                        )
-                        
+                    time = reg.get('tiempo')
+                    if time is None:
+                        registros_fallidos.append({'indice': idx, 'error': 'Falta el campo tiempo'})
+                        continue
+                    if num_registros_actuales + len(registros_a_crear) >= self.MAX_REGISTROS_POR_EQUIPO:
+                        registros_fallidos.append({'indice': idx, 'error': f'Se alcanzó el límite de {self.MAX_REGISTROS_POR_EQUIPO} registros'})
+                        continue
+                    record_id = reg.get('id_registro') or uuid.uuid4()
+                    registro_obj = RegistroTiempo(
+                        record_id=record_id,
+                        team=equipo,
+                        time=time,
+                        hours=reg.get('horas', 0),
+                        minutes=reg.get('minutos', 0),
+                        seconds=reg.get('segundos', 0),
+                        milliseconds=reg.get('milisegundos', 0)
+                    )
+                    registros_a_crear.append(registro_obj)
+                    mapping_idx_registro.append((idx, registro_obj))
+
+                if not registros_a_crear:
+                    return {
+                        'total_enviados': len(registros),
+                        'total_guardados': 0,
+                        'total_fallidos': len(registros_fallidos),
+                        'registros_guardados': registros_guardados,
+                        'registros_fallidos': registros_fallidos,
+                    }
+
+                # Crear en bloque con ignore_conflicts para idempotencia
+                creados = RegistroTiempo.objects.bulk_create(
+                    registros_a_crear,
+                    ignore_conflicts=True,
+                )
+
+                # Mapear resultados: los no creados son duplicados
+                creados_ids = {r.record_id for r in creados}
+                for idx, registro_obj in mapping_idx_registro:
+                    if registro_obj.record_id in creados_ids:
                         registros_guardados.append({
                             'indice': idx,
-                            'id_registro': str(registro.record_id),
-                            'tiempo': registro.time,
-                            'duplicado': False
+                            'id_registro': str(registro_obj.record_id),
+                            'tiempo': registro_obj.time,
+                            'duplicado': False,
                         })
-                        
-                        num_registros_actuales += 1
-                        
-                    except Exception as e:
-                        registros_fallidos.append({
+                    else:
+                        registros_guardados.append({
                             'indice': idx,
-                            'error': str(e)
+                            'id_registro': str(registro_obj.record_id),
+                            'tiempo': registro_obj.time,
+                            'duplicado': True,
                         })
-                
+
                 return {
                     'total_enviados': len(registros),
-                    'total_guardados': len(registros_guardados),
+                    'total_guardados': len(creados),
                     'total_fallidos': len(registros_fallidos),
                     'registros_guardados': registros_guardados,
                     'registros_fallidos': registros_fallidos

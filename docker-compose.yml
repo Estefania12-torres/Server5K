@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: server5k-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: server5k
+      POSTGRES_USER: server5k
+      POSTGRES_PASSWORD: server5k
+      # Para desarrollo: trust todas las conexiones (NO usar en producción)
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5433:5432"  # Puerto 5433 en host para evitar conflicto con Postgres local
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U server5k -d server5k"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

@@ -119,60 +119,19 @@ class RegistrarTiemposView(APIView):
                         status=status.HTTP_403_FORBIDDEN
                     )
                 
-                # Verificar que el equipo no tenga registros previos
-                registros_existentes = RegistroTiempo.objects.filter(team=equipo).count()
-                if registros_existentes > 0:
-                    return Response(
-                        {"exito": False, "error": f"El equipo ya tiene {registros_existentes} registros. No se permiten envíos adicionales."},
-                        status=status.HTTP_409_CONFLICT
-                    )
-                
-                # Crear los registros
-                registros_creados = []
-                for idx, reg in enumerate(registros):
-                    tiempo = reg.get('tiempo')
-                    if tiempo is None:
-                        return Response(
-                            {"exito": False, "error": f"Registro {idx}: falta campo 'tiempo'"},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-                    
-                    record_id = reg.get('id_registro') or str(uuid.uuid4())
-                    
-                    # Verificar idempotencia
-                    existente = RegistroTiempo.objects.filter(record_id=record_id).first()
-                    if existente:
-                        registros_creados.append({
-                            'id_registro': str(existente.record_id),
-                            'tiempo': existente.time,
-                            'duplicado': True
-                        })
-                        continue
-                    
-                    registro = RegistroTiempo.objects.create(
-                        record_id=record_id,
-                        team=equipo,
-                        time=tiempo,
-                        hours=reg.get('horas', 0),
-                        minutes=reg.get('minutos', 0),
-                        seconds=reg.get('segundos', 0),
-                        milliseconds=reg.get('milisegundos', 0)
-                    )
-                    
-                    registros_creados.append({
-                        'id_registro': str(registro.record_id),
-                        'tiempo': registro.time,
-                        'horas': registro.hours,
-                        'minutos': registro.minutes,
-                        'segundos': registro.seconds,
-                        'milisegundos': registro.milliseconds,
-                        'duplicado': False
-                    })
-                
-                logger.info(f"[HTTP] ✅ {len(registros_creados)} registros guardados para equipo {equipo.name}")
-                
+                # Delegar creación en el servicio (usa bulk_create + idempotencia)
+                from app.services.registro_service import RegistroService
+                servicio = RegistroService()
+                # Usar versión SÍNCRONA para evitar problemas de conexión en vistas HTTP
+                resultado = servicio.registrar_batch_sync(juez=juez, equipo_id=equipo.id, registros=registros)
+
+                logger.info(f"[HTTP] ✅ Guardados: {resultado['total_guardados']} | Fallidos: {resultado['total_fallidos']} para equipo {equipo.name}")
+
+                if resultado['total_guardados'] == 0 and resultado['total_fallidos'] > 0:
+                    return Response({"exito": False, "error": resultado['registros_fallidos']}, status=status.HTTP_400_BAD_REQUEST)
+
                 # Notificar por WebSocket a la UI pública
-                self._notificar_actualizacion(equipo, registros_creados)
+                self._notificar_actualizacion(equipo, resultado['registros_guardados'])
                 
                 return Response({
                     "exito": True,
@@ -180,8 +139,9 @@ class RegistrarTiemposView(APIView):
                     "equipo_id": equipo.id,
                     "equipo_nombre": equipo.name,
                     "equipo_dorsal": equipo.number,
-                    "total_guardados": len(registros_creados),
-                    "registros": registros_creados
+                    "total_guardados": resultado['total_guardados'],
+                    "registros": resultado['registros_guardados'],
+                    "registros_fallidos": resultado['registros_fallidos'],
                 }, status=status.HTTP_201_CREATED)
                 
         except Exception as e:

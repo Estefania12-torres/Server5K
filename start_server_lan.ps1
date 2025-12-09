@@ -15,7 +15,7 @@ Write-Host ""
 # ============================================================================
 # 1. Verificar Redis en Docker
 # ============================================================================
-Write-Host "📡 [1/6] Verificando Redis en Docker..." -ForegroundColor Cyan
+Write-Host "📡 [1/7] Verificando Redis en Docker..." -ForegroundColor Cyan
 
 $redisContainer = docker ps --filter "name=redis-dev" --format "{{.Names}}" 2>$null
 if ($redisContainer -eq "redis-dev") {
@@ -46,9 +46,32 @@ else {
 Write-Host ""
 
 # ============================================================================
-# 2. Obtener y mostrar IP Local
+# 2. Verificar Postgres en Docker (docker-compose)
 # ============================================================================
-Write-Host "🌐 [2/6] Verificando configuración de red..." -ForegroundColor Cyan
+Write-Host "🗄️  [2/7] Verificando Postgres en Docker..." -ForegroundColor Cyan
+
+$pgContainer = docker ps --filter "name=server5k-postgres" --format "{{.Names}}" 2>$null
+if ($pgContainer -eq "server5k-postgres") {
+    Write-Host "   ✅ Container 'server5k-postgres' está corriendo" -ForegroundColor Green
+}
+else {
+    Write-Host "   ⚠️  Postgres no está corriendo, levantando con docker-compose" -ForegroundColor Yellow
+    docker compose up -d postgres
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "   ❌ No se pudo levantar Postgres con docker-compose" -ForegroundColor Red
+        exit 1
+    }
+    else {
+        Write-Host "   ✅ Postgres iniciado" -ForegroundColor Green
+    }
+}
+
+Write-Host ""
+
+# ============================================================================
+# 3. Obtener y mostrar IP Local
+# ============================================================================
+Write-Host "🌐 [3/7] Verificando configuración de red..." -ForegroundColor Cyan
 
 # $ipAddress = "192.168.0.190"  # IP configurada en ALLOWED_HOSTS
 $ipAddress = "192.168.0.108"  # IP configurada en ALLOWED_HOSTS
@@ -67,9 +90,9 @@ else {
 Write-Host ""
 
 # ============================================================================
-# 3. Verificar Firewall (solo advertencia, no bloqueante)
+# 4. Verificar Firewall (solo advertencia, no bloqueante)
 # ============================================================================
-Write-Host "🔥 [3/6] Verificando configuración de Firewall..." -ForegroundColor Cyan
+Write-Host "🔥 [4/7] Verificando configuración de Firewall..." -ForegroundColor Cyan
 
 $firewallRule = Get-NetFirewallRule -DisplayName "Django Server5K" -ErrorAction SilentlyContinue
 if ($firewallRule) {
@@ -92,21 +115,30 @@ else {
 Write-Host ""
 
 # ============================================================================
-# 4. Configurar variables de entorno
+# 5. Configurar variables de entorno
 # ============================================================================
-Write-Host "⚙️  [4/6] Configurando variables de entorno..." -ForegroundColor Cyan
+Write-Host "⚙️  [5/7] Configurando variables de entorno..." -ForegroundColor Cyan
 $env:DJANGO_SETTINGS_MODULE = "server.settings"
 Write-Host "   ✅ DJANGO_SETTINGS_MODULE configurado" -ForegroundColor Green
+
+# Defaults para Postgres (se pueden overridear antes de ejecutar el script)
+if (-not $env:POSTGRES_DB) { $env:POSTGRES_DB = "server5k" }
+if (-not $env:POSTGRES_USER) { $env:POSTGRES_USER = "server5k" }
+if (-not $env:POSTGRES_PASSWORD) { $env:POSTGRES_PASSWORD = "server5k" }
+if (-not $env:POSTGRES_HOST) { $env:POSTGRES_HOST = "127.0.0.1" }
+if (-not $env:POSTGRES_PORT) { $env:POSTGRES_PORT = "5433" }  # Puerto 5433 para evitar conflicto con Postgres local
+Write-Host "   ✅ Variables POSTGRES_* listas (host=$($env:POSTGRES_HOST):$($env:POSTGRES_PORT))" -ForegroundColor Green
 
 Write-Host ""
 
 # ============================================================================
-# 5. Verificar migraciones
+# 6. Verificar migraciones
 # ============================================================================
-Write-Host "📦 [5/6] Verificando base de datos..." -ForegroundColor Cyan
+Write-Host "📦 [6/7] Verificando base de datos..." -ForegroundColor Cyan
 
-$migrationCheck = uv run python manage.py showmigrations --plan 2>&1 | Select-String "\[ \]"
-if ($migrationCheck) {
+# migrate --check devuelve exit code 1 si hay migraciones pendientes
+uv run python manage.py migrate --check 2>$null
+if ($LASTEXITCODE -ne 0) {
     Write-Host "   ⚠️  Hay migraciones pendientes, aplicando..." -ForegroundColor Yellow
     uv run python manage.py migrate --noinput
     if ($LASTEXITCODE -eq 0) {
@@ -118,13 +150,13 @@ if ($migrationCheck) {
     }
 }
 else {
-    Write-Hos+t "   ✅ Base de datos actualizada" -ForegroundColor Green
+    Write-Host "   ✅ Base de datos actualizada" -ForegroundColor Green
 }
 
 Write-Host ""
 
 # ============================================================================
-# 6. Mostrar información de conexión
+# 7. Mostrar información de conexión
 # ============================================================================
 Write-Host "============================================================================" -ForegroundColor Cyan
 Write-Host "  📱 Configuración para Apps Móviles" -ForegroundColor Yellow
@@ -148,7 +180,7 @@ Write-Host ""
 # ============================================================================
 # 7. Iniciar servidor Daphne
 # ============================================================================
-Write-Host "🚀 [6/6] Iniciando servidor Daphne..." -ForegroundColor Cyan
+Write-Host "🚀 [7/7] Iniciando servidor Daphne..." -ForegroundColor Cyan
 Write-Host "   Binding: 0.0.0.0:8000 (permite conexiones externas)" -ForegroundColor Gray
 Write-Host "   Presiona Ctrl+C para detener el servidor" -ForegroundColor Yellow
 Write-Host ""
@@ -156,7 +188,10 @@ Write-Host "====================================================================
 Write-Host ""
 
 # Iniciar Daphne en todas las interfaces (0.0.0.0) para aceptar conexiones LAN
-uv run daphne -b 0.0.0.0 -p 8000 server.asgi:application
+# Usando múltiples workers para soportar 50+ dispositivos simultáneos
+# --proxy-headers: para cuando hay reverse proxy (nginx, etc)
+# -v 1: verbosidad baja para mejor rendimiento
+uv run daphne -b 0.0.0.0 -p 8000 -v 1 --proxy-headers server.asgi:application
 
 # Si el servidor se detiene
 Write-Host ""
