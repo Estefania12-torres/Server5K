@@ -1,95 +1,68 @@
-# Byte-compiled / optimized / DLL files
+# === Python / Django ===
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
+*.sqlite3
+db.sqlite3
 
-# Distribution / packaging
+# === Distribution / Packaging ===
 build/
 dist/
 *.egg-info/
 .eggs/
 .installed.cfg
 
-# Virtual environments
+# === Virtual Environments ===
 .venv/
 venv/
 env/
-.env/
-.env.*
 .uv/
 
-# Django
-db.sqlite3
-*.log
-media/
+# === Environment Variables (CRÍTICO) ===
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# === Django Static & Media ===
 staticfiles/
+media/
+logs/
+*.log
 
-
-# Tailwind / Front-end tooling
+# === Front-end ===
 node_modules/
 package-lock.json
 yarn.lock
+npm-debug.log*
+yarn-error.log*
 
-# Testing / Coverage
+# === Testing / Coverage ===
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
 
-# Type checking
+# === Type Checking ===
 .mypy_cache/
 .dmypy.json
 dmypy.json
 
-# IDE / Editor
+# === IDE / Editor ===
 .vscode/
 .idea/
 *.code-workspace
+.python-version
 
-# Misc
-*.sqlite3
+# === OS Files ===
 .DS_Store
 Thumbs.db
 
-# ---- Additional recommended ignores ----
-# dotenv file (single-file env) - keep secrets out of repo
-.env
-!.env.example
-
-# Cache / build / local state
-.cache/
-coverage.xml
-
-# Node / npm logs
-npm-debug.log*
-yarn-error.log*
-
-# Editor/IDE misc (already included common ones above)
-# PyCharm's workspace settings
-.idea/
-
-# pyenv
-.python-version
-
-# local logs directory
-logs/
-
-# Celery beat schedule (if you use Celery)
+# === Celery (si lo usas) ===
 celerybeat-schedule
 celerybeat.pid
 
-# Secrets or dotenv variants
-.env.local
-.env.*.local
-
-# Test files (no subir a producción)
-test_*.py
-test_*.html
-
-# Archivos de base de datos local
-*.sqlite3
-
-# Scripts locales de desarrollo
+# === Scripts locales de desarrollo ===
 start_server*.ps1
+start_server*.sh
