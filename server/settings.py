@@ -19,6 +19,13 @@ DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 _allowed_hosts_env = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(',') if h.strip()]
 
+_csrf_origins_env = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_origins_env.split(',') if o.strip()]
+
+_cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_env.split(',') if o.strip()]
+
+
 
 INSTALLED_APPS = [
     'daphne',
