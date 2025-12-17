@@ -413,3 +413,56 @@ class JuezConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(mensaje_a_enviar)
         
         logger.info(f"   Notificación de registros enviada al juez {self.juez_id}")
+
+
+class CompetenciaPublicConsumer(AsyncJsonWebsocketConsumer):
+    """Consumer WebSocket público para ver resultados en vivo.
+
+    Se suscribe al grupo `competencia_<id>` y reenvía eventos al navegador.
+    """
+
+    async def connect(self):
+        competencia_id = str(self.scope['url_route']['kwargs'].get('competencia_id'))
+        if not competencia_id:
+            await self.close(code=4400)
+            return
+
+        self.competencia_id = competencia_id
+        self.group_name = f'competencia_{self.competencia_id}'
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+
+        await self.send_json({
+            'tipo': 'conexion_establecida',
+            'competencia_id': int(self.competencia_id),
+        })
+
+    async def disconnect(self, close_code):
+        try:
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        except Exception:
+            pass
+
+    async def receive_json(self, content, **kwargs):
+        if content.get('tipo') == 'ping':
+            await self.send_json({'tipo': 'pong'})
+
+    async def registros_actualizados(self, event):
+        data = event.get('data', {})
+        await self.send_json({
+            'tipo': 'registros_actualizados',
+            'data': data,
+        })
+
+    async def competencia_iniciada(self, event):
+        await self.send_json({
+            'tipo': 'competencia_iniciada',
+            'data': event.get('data', {}),
+        })
+
+    async def competencia_detenida(self, event):
+        await self.send_json({
+            'tipo': 'competencia_detenida',
+            'data': event.get('data', {}),
+        })

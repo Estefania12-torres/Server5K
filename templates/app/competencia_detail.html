@@ -21,11 +21,9 @@
         <h2 style="display: flex; align-items: center; gap: 0.625rem; margin-bottom: 1rem;">
             <i class="bi-trophy-fill" style="color: var(--gold); font-size: 1.5rem;"></i>
             {{ competencia.name }}
-            {% if en_curso %}
-                <span class="badge badge-success" style="font-size: 0.75rem; animation: pulse-subtle 2s ease-in-out infinite;">
-                    <i class="bi-broadcast"></i> EN VIVO
-                </span>
-            {% endif %}
+            <span id="badge-en-vivo" {% if not en_curso %}style="display:none;"{% else %}style="font-size: 0.75rem; animation: pulse-subtle 2s ease-in-out infinite;"{% endif %} class="badge badge-success">
+                <i class="bi-broadcast"></i> EN VIVO
+            </span>
         </h2>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
@@ -37,19 +35,21 @@
             </div>
             <div>
                 <div class="stats-label">Estado</div>
-                {% if competencia.get_status_code == 'running' %}
-                    <span class="badge badge-success" style="font-size: 0.813rem;">
-                        <i class="bi-play-circle-fill"></i> En Curso
-                    </span>
-                {% elif competencia.get_status_code == 'finished' %}
-                    <span class="badge badge-secondary" style="font-size: 0.813rem;">
-                        <i class="bi-check-circle-fill"></i> Finalizada
-                    </span>
-                {% else %}
-                    <span class="badge badge-info" style="font-size: 0.813rem;">
-                        <i class="bi-calendar-event"></i> Programada
-                    </span>
-                {% endif %}
+                <span id="badge-estado">
+                    {% if competencia.get_status_code == 'running' %}
+                        <span class="badge badge-success" style="font-size: 0.813rem;">
+                            <i class="bi-play-circle-fill"></i> En Curso
+                        </span>
+                    {% elif competencia.get_status_code == 'finished' %}
+                        <span class="badge badge-secondary" style="font-size: 0.813rem;">
+                            <i class="bi-check-circle-fill"></i> Finalizada
+                        </span>
+                    {% else %}
+                        <span class="badge badge-info" style="font-size: 0.813rem;">
+                            <i class="bi-calendar-event"></i> Programada
+                        </span>
+                    {% endif %}
+                </span>
             </div>
         </div>
 
@@ -57,15 +57,15 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.875rem; padding-top: 1rem; border-top: 1px solid var(--border);">
             <div class="stats-box" style="padding: 0.75rem;">
                 <div class="stats-label">Total Equipos</div>
-                <div class="stats-value">{{ total_equipos }}</div>
+                <div class="stats-value" id="stat-total-equipos">{{ total_equipos }}</div>
             </div>
             <div class="stats-box" style="padding: 0.75rem;">
                 <div class="stats-label">Calificados</div>
-                <div class="stats-value text-success">{{ equipos_calificados }}</div>
+                <div class="stats-value text-success" id="stat-equipos-calificados">{{ equipos_calificados }}</div>
             </div>
             <div class="stats-box" style="padding: 0.75rem;">
                 <div class="stats-label">Descalificados</div>
-                <div class="stats-value text-danger">{{ equipos_descalificados }}</div>
+                <div class="stats-value text-danger" id="stat-equipos-descalificados">{{ equipos_descalificados }}</div>
             </div>
         </div>
     </div>
@@ -99,206 +99,147 @@
 </div>
 {% endif %}
 
-<!-- PODIO COMPACTO - Solo 1° y 2° Lugar -->
-{% if equipos|length >= 1 %}
-<div class="card mb-4" style="overflow: hidden;">
-    <div class="podium-header">
-        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--text-primary); text-align: center;">
-            🏆 Primeros Lugares{% if categoria_filtro %} - {{ equipos.0.get_category_display }}{% endif %}
-        </h3>
-    </div>
-    <div class="card-body" style="padding: 1.25rem;">
-        <div class="podium-compact">
-            <!-- 1er LUGAR -->
-            {% with equipos|first as primer_lugar %}
-            {% if primer_lugar and not primer_lugar.descalificado %}
-            <a href="{% url 'ui:equipo_detail' primer_lugar.pk %}" class="podium-card-compact podium-gold">
-                <div class="podium-medal">🥇</div>
-                <div class="podium-rank-badge">#1</div>
-                <div class="podium-content">
-                    <div class="podium-dorsal-compact">Dorsal #{{ primer_lugar.number }}</div>
-                    <div class="podium-name-compact">{{ primer_lugar.name }}</div>
-                    <div class="podium-category-compact">{{ primer_lugar.get_category_display }}</div>
-                    <div class="podium-time-compact">{{ primer_lugar.tiempo_total_formateado }}</div>
-                </div>
-            </a>
-            {% else %}
-            <div class="podium-card-compact podium-empty">
-                <div class="podium-medal">🏆</div>
-                <div class="podium-empty-text">Esperando<br>resultados...</div>
-            </div>
-            {% endif %}
-            {% endwith %}
-
-            <!-- 2do LUGAR -->
-            {% if equipos|length > 1 %}
-                {% with equipos.1 as segundo_lugar %}
-                {% if segundo_lugar and not segundo_lugar.descalificado %}
-                <a href="{% url 'ui:equipo_detail' segundo_lugar.pk %}" class="podium-card-compact podium-silver">
-                    <div class="podium-medal">🥈</div>
-                    <div class="podium-rank-badge">#2</div>
-                    <div class="podium-content">
-                        <div class="podium-dorsal-compact">Dorsal #{{ segundo_lugar.number }}</div>
-                        <div class="podium-name-compact">{{ segundo_lugar.name }}</div>
-                        <div class="podium-category-compact">{{ segundo_lugar.get_category_display }}</div>
-                        <div class="podium-time-compact">{{ segundo_lugar.tiempo_total_formateado }}</div>
-                    </div>
-                </a>
-                {% else %}
-                <div class="podium-card-compact podium-empty">
-                    <div class="podium-medal">🥈</div>
-                    <div class="podium-empty-text">Esperando<br>resultados...</div>
-                </div>
-                {% endif %}
-                {% endwith %}
-            {% else %}
-            <div class="podium-card-compact podium-empty">
-                <div class="podium-medal">🥈</div>
-                <div class="podium-empty-text">Esperando<br>resultados...</div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+<div id="results-container">
+    {% include 'app/partials/competencia_results.html' %}
 </div>
-{% endif %}
-
-<!-- Listado de Equipos - Desde el 3er lugar -->
-{% if equipos|length > 2 %}
-<div style="display: flex; flex-direction: column; gap: 0.875rem;">
-    {% for equipo in equipos %}
-        {% if equipo.posicion > 2 or equipo.descalificado %}
-        <a href="{% url 'ui:equipo_detail' equipo.pk %}" class="team-card-link" style="text-decoration: none; color: inherit;">
-            <div class="card team-card {% if equipo.descalificado %}disqualified{% else %}qualified{% endif %}" style="transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;">
-                <div class="card-body" style="position: relative; padding: 1.25rem;">
-                    
-                    <!-- Badge de Posición (solo para calificados) -->
-                    {% if not equipo.descalificado %}
-                        <div class="position-badge regular">
-                            {{ equipo.posicion }}
-                        </div>
-                    {% endif %}
-
-                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; align-items: center; margin-left: {% if not equipo.descalificado %}52px{% else %}0{% endif %};">
-                        
-                        <!-- Información del Equipo -->
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.625rem;">
-                                <span class="badge badge-secondary" style="font-size: 0.875rem; padding: 0.375rem 0.75rem;">
-                                    #{{ equipo.number }}
-                                </span>
-                                <h4 style="margin: 0; font-size: 1.125rem; font-weight: 700;">
-                                    {{ equipo.name }}
-                                </h4>
-                                {% if equipo.descalificado %}
-                                    <span class="badge badge-danger" style="font-size: 0.75rem;">
-                                        ✗ DESCALIFICADO
-                                    </span>
-                                {% endif %}
-                            </div>
-                            
-                            <div style="display: flex; gap: 0.875rem; flex-wrap: wrap;">
-                                <div style="display: flex; align-items: center; gap: 0.375rem; color: var(--text-secondary); font-size: 0.813rem;">
-                                    <i class="bi-tag"></i>
-                                    <span>{{ equipo.get_category_display }}</span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.375rem; color: var(--text-secondary); font-size: 0.813rem;">
-                                    <i class="bi-person-badge"></i>
-                                    <span>{{ equipo.judge.get_full_name|default:equipo.judge.username }}</span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.375rem; color: var(--text-secondary); font-size: 0.813rem;">
-                                    <i class="bi-people"></i>
-                                    <span>{{ equipo.jugadores_completados }}/{{ equipo.num_registros }} jugadores</span>
-                                </div>
-                                {% if equipo.descalificado %}
-                                    <div style="display: flex; align-items: center; gap: 0.375rem; color: var(--danger); font-size: 0.813rem; font-weight: 600;">
-                                        <i class="bi-clock"></i>
-                                        <span>{{ equipo.jugadores_ausentes }} ausente{{ equipo.jugadores_ausentes|pluralize }}</span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Estadísticas -->
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.875rem; min-width: 220px;">
-                            <div class="stats-box" style="padding: 0.75rem; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); border-color: var(--warning);">
-                                <div class="stats-label">⚡ Mejor</div>
-                                {% if equipo.mejor_tiempo_ms > 0 %}
-                                    <div class="stats-value text-warning" style="font-size: 0.938rem;">
-                                        {{ equipo.mejor_tiempo_formateado }}
-                                    </div>
-                                {% else %}
-                                    <div class="stats-value text-muted" style="font-size: 0.938rem;">--</div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="stats-box" style="padding: 0.75rem; background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%); border-color: var(--primary); border-width: 2px;">
-                                <div class="stats-label">🏁 Total</div>
-                                <div class="stats-value" style="color: var(--primary); font-size: 0.938rem;">
-                                    {{ equipo.tiempo_total_formateado }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Indicador de click -->
-                    <div style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
-                        <i class="bi-chevron-right"></i>
-                    </div>
-
-                </div>
-            </div>
-        </a>
-        {% endif %}
-    {% endfor %}
-</div>
-
-<style>
-    .team-card-link:hover .team-card {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-</style>
-{% elif equipos|length <= 2 and equipos|length > 0 %}
-<div class="card">
-    <div class="card-body">
-        <div style="text-align: center; padding: 2rem;">
-            <i class="bi-trophy" style="font-size: 2.5rem; color: var(--gold); opacity: 0.5; margin-bottom: 1rem;"></i>
-            <h3 style="color: var(--text-secondary); font-weight: 600; font-size: 1rem;">
-                Solo hay {{ equipos|length }} equipo{{ equipos|length|pluralize }} {% if categoria_filtro %}en esta categoría{% endif %}
-            </h3>
-            <p class="text-muted" style="font-size: 0.875rem;">
-                Los demás equipos aparecerán aquí cuando completen sus tiempos
-            </p>
-        </div>
-    </div>
-</div>
-{% else %}
-<div class="card">
-    <div class="card-body">
-        <div style="text-align: center; padding: 2.5rem 2rem;">
-            <i class="bi-people" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"></i>
-            <h3 style="color: var(--text-secondary); font-weight: 600; font-size: 1.125rem; margin-bottom: 0.5rem;">
-                {% if categoria_filtro %}
-                    No hay equipos en esta categoría
-                {% else %}
-                    No hay equipos registrados
-                {% endif %}
-            </h3>
-            <p class="text-muted" style="font-size: 0.875rem;">
-                {% if categoria_filtro %}
-                    Prueba seleccionando otra categoría
-                {% else %}
-                    Los equipos aparecerán aquí cuando sean asignados
-                {% endif %}
-            </p>
-        </div>
-    </div>
-</div>
-{% endif %}
 
 <div style="margin-top: 1.5rem;">
     <a href="{% url 'ui:competencia_list' %}" class="btn btn-secondary">
         <i class="bi-arrow-left"></i> Volver
     </a>
 </div>
+
+<script>
+(() => {
+    const competenciaId = {{ competencia.id|default:'null' }};
+    if (!competenciaId) return;
+
+    const resultsEl = document.getElementById('results-container');
+    if (!resultsEl) return;
+
+    const statTotal = document.getElementById('stat-total-equipos');
+    const statCal = document.getElementById('stat-equipos-calificados');
+    const statDesc = document.getElementById('stat-equipos-descalificados');
+
+    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = `${proto}://${window.location.host}/ws/competencia/${competenciaId}/`;
+    const partialBaseUrl = "{% url 'ui:competencia_results_partial' competencia.pk %}";
+
+    let refreshTimer = null;
+    let inFlight = false;
+    let pending = false;
+    let refreshSeq = 0;
+
+    const swapResultsHtml = (html) => {
+        const prevHeight = resultsEl.offsetHeight;
+        if (prevHeight) resultsEl.style.minHeight = `${prevHeight}px`;
+
+        const tpl = document.createElement('template');
+        tpl.innerHTML = html;
+        resultsEl.replaceChildren(tpl.content);
+
+        requestAnimationFrame(() => {
+            resultsEl.style.minHeight = '';
+        });
+    };
+
+    const refreshResults = async () => {
+        if (inFlight) {
+            pending = true;
+            return;
+        }
+
+        inFlight = true;
+        const mySeq = ++refreshSeq;
+
+        try {
+            const res = await fetch(`${partialBaseUrl}${window.location.search}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (!res.ok) return;
+
+            const html = await res.text();
+            if (mySeq !== refreshSeq) return;
+
+            swapResultsHtml(html);
+
+            const root = resultsEl.querySelector('#results-root');
+            if (root) {
+                if (statTotal) statTotal.textContent = root.dataset.totalEquipos || statTotal.textContent;
+                if (statCal) statCal.textContent = root.dataset.equiposCalificados || statCal.textContent;
+                if (statDesc) statDesc.textContent = root.dataset.equiposDescalificados || statDesc.textContent;
+            }
+        } catch {
+            // No romper la UI si el refresco falla momentáneamente.
+        } finally {
+            inFlight = false;
+            if (pending) {
+                pending = false;
+                scheduleRefresh();
+            }
+        }
+    };
+
+    const scheduleRefresh = () => {
+        if (inFlight) {
+            pending = true;
+            return;
+        }
+
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(refreshResults, 120);
+    };
+
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (evt) => {
+        let msg;
+        try { msg = JSON.parse(evt.data); } catch { return; }
+
+        if (msg.tipo === 'registros_actualizados') {
+            // Al llegar un equipo nuevo o un mejor tiempo, el ranking puede cambiar.
+            scheduleRefresh();
+            return;
+        }
+
+        if (msg.tipo === 'competencia_iniciada') {
+            const badgeVivo = document.getElementById('badge-en-vivo');
+            if (badgeVivo) badgeVivo.style.display = '';
+
+            const badgeEstado = document.getElementById('badge-estado');
+            if (badgeEstado) {
+                badgeEstado.innerHTML = `
+                    <span class="badge badge-success" style="font-size: 0.813rem;">
+                        <i class="bi-play-circle-fill"></i> En Curso
+                    </span>
+                `;
+            }
+
+            return;
+        }
+
+        if (msg.tipo === 'competencia_detenida') {
+            const badgeVivo = document.getElementById('badge-en-vivo');
+            if (badgeVivo) badgeVivo.style.display = 'none';
+
+            const badgeEstado = document.getElementById('badge-estado');
+            if (badgeEstado) {
+                badgeEstado.innerHTML = `
+                    <span class="badge badge-secondary" style="font-size: 0.813rem;">
+                        <i class="bi-check-circle-fill"></i> Finalizada
+                    </span>
+                `;
+            }
+
+            return;
+        }
+    };
+
+    ws.onopen = () => {
+        setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ tipo: 'ping' }));
+        }, 25000);
+    };
+})();
+</script>
 {% endblock %}
