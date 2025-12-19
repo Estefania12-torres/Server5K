@@ -125,7 +125,15 @@ class RegistrarTiemposView(APIView):
                 # Usar versión SÍNCRONA para evitar problemas de conexión en vistas HTTP
                 resultado = servicio.registrar_batch_sync(juez=juez, equipo_id=equipo.id, registros=registros)
 
-                logger.info(f"[HTTP] ✅ Guardados: {resultado['total_guardados']} | Fallidos: {resultado['total_fallidos']} para equipo {equipo.name}")
+                logger.info(
+                    "[HTTP] Registros procesados: guardados=%s fallidos=%s equipo=%s(%s) juez=%s(%s)",
+                    resultado['total_guardados'],
+                    resultado['total_fallidos'],
+                    equipo.name,
+                    equipo.id,
+                    juez.username,
+                    juez.id,
+                )
 
                 if resultado['total_guardados'] == 0 and resultado['total_fallidos'] > 0:
                     return Response({"exito": False, "error": resultado['registros_fallidos']}, status=status.HTTP_400_BAD_REQUEST)

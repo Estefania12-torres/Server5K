@@ -24,26 +24,25 @@ def get_juez_from_token(token):
     from app.models import Juez
     
     try:
-        logger.debug(f"🔍 Validando token JWT...")
+        logger.debug("Validando token JWT")
         # Validar el token
         access_token = AccessToken(token)
         juez_id = access_token.get('juez_id')
-        
-        logger.debug(f"🔍 Token decodificado - juez_id: {juez_id}")
+        logger.debug("Token decodificado: juez_id=%s", juez_id)
         
         if not juez_id:
-            logger.error("❌ Token no contiene juez_id")
+            logger.error("Token JWT no contiene juez_id")
             return None
         
         # Obtener el juez con sus equipos (prefetch_related para optimizar)
         juez = Juez.objects.prefetch_related('teams', 'teams__competition').get(id=juez_id, is_active=True)
-        logger.info(f"✅ Juez encontrado: {juez.username} (ID: {juez.id})")
+        logger.debug("Juez autenticado: %s (id=%s)", juez.username, juez.id)
         return juez
     except Juez.DoesNotExist:
-        logger.error(f"❌ Juez con ID {juez_id} no existe o está inactivo")
+        logger.warning("Juez no existe o está inactivo: juez_id=%s", juez_id)
         return None
     except Exception as e:
-        logger.error(f"❌ Error validando token: {e}")
+        logger.error("Error validando token JWT: %s", e)
         return None
 
 
@@ -59,7 +58,7 @@ def verificar_competencia_activa(juez):
         bool: True si la competencia está activa, False en caso contrario
     """
     tiene_competencia = juez.teams.filter(competition__is_active=True).exists()
-    logger.debug(f"🔍 Juez {juez.id} tiene competencia activa: {tiene_competencia}")
+    logger.debug("Competencia activa: juez_id=%s activa=%s", juez.id, tiene_competencia)
     return tiene_competencia
 
 

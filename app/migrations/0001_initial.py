@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'verbose_name': 'Resultado por Equipo',
-                'verbose_name_plural': '📊 Resultados por Equipo',
+                'verbose_name_plural': 'Resultados por Equipo',
                 'proxy': True,
                 'indexes': [],
                 'constraints': [],

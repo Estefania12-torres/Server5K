@@ -45,7 +45,7 @@ def competencia_estado_cambiado(sender, instance, created, **kwargs):
     
     channel_layer = get_channel_layer()
     if not channel_layer:
-        logger.warning("❌ Channel layer no disponible - No se puede enviar notificación")
+        logger.warning("Channel layer no disponible; no se puede enviar notificación")
         return
     
     group_name = f'competencia_{instance.id}'
@@ -54,11 +54,11 @@ def competencia_estado_cambiado(sender, instance, created, **kwargs):
     if instance.is_running:
         tipo_evento = 'competencia_iniciada'
         mensaje = 'La competencia ha iniciado'
-        logger.info(f"🏁 Competencia {instance.name} (ID: {instance.id}) INICIADA - Notificando jueces...")
+        logger.info("Competencia iniciada: %s (id=%s)", instance.name, instance.id)
     else:
         tipo_evento = 'competencia_detenida'
         mensaje = 'La competencia ha finalizado'
-        logger.info(f"🛑 Competencia {instance.name} (ID: {instance.id}) DETENIDA - Notificando jueces...")
+        logger.info("Competencia detenida: %s (id=%s)", instance.name, instance.id)
     
     # Enviar notificación al grupo de la competencia
     try:
@@ -74,6 +74,6 @@ def competencia_estado_cambiado(sender, instance, created, **kwargs):
                 }
             }
         )
-        logger.info(f"✅ Notificación enviada al grupo {group_name}: {tipo_evento}")
+        logger.debug("Notificación enviada al grupo %s: %s", group_name, tipo_evento)
     except Exception as e:
-        logger.error(f"❌ Error enviando notificación WebSocket: {e}", exc_info=True)
+        logger.error("Error enviando notificación WebSocket: %s", e, exc_info=True)

@@ -12,7 +12,7 @@ Sistema backend para gestión de competencias 5K con registro de tiempos en tiem
 
 ---
 
-## 🐳 Despliegue con Docker Compose
+## Despliegue con Docker Compose
 
 El proyecto se despliega con **3 contenedores**:
 
@@ -101,7 +101,7 @@ docker compose exec web python manage.py populate_data --clear --production --ju
 | `--password BASE`        | Contraseña base en desarrollo (ej: `--password pass` → pass1, pass2...) |
 | `--clear`                | Elimina todos los datos antes de crear nuevos                           |
 
-**⚠️ IMPORTANTE**: El comando genera un archivo `credenciales_jueces.txt` con todas las contraseñas.
+**IMPORTANTE**: El comando genera un archivo `credenciales_jueces.txt` con todas las contraseñas.
 
 ```bash
 # Ver las credenciales generadas

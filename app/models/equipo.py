@@ -77,4 +77,4 @@ class ResultadoEquipo(Equipo):
     class Meta:
         proxy = True
         verbose_name = 'Resultado por Equipo'
-        verbose_name_plural = '📊 Resultados por Equipo'
+        verbose_name_plural = 'Resultados por Equipo'

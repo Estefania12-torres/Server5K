@@ -326,10 +326,10 @@ class Command(BaseCommand):
 
             f.write('\n' + '═'*70 + '\n')
             if is_production:
-                f.write('⚠️  IMPORTANTE: Guarda este archivo en un lugar seguro.\n')
+                f.write('IMPORTANTE: Guarda este archivo en un lugar seguro.\n')
                 f.write('    Estas contraseñas son únicas y no se pueden recuperar.\n')
             else:
-                f.write('ℹ️  NOTA: Estas credenciales son para desarrollo/pruebas.\n')
+                f.write('NOTA: Estas credenciales son para desarrollo/pruebas.\n')
                 f.write('    Patrón de contraseñas: juezN123 (ej: juez1123, juez2123...)\n')
                 f.write('    Use --production para generar contraseñas seguras.\n')
             f.write('═'*70 + '\n')
@@ -347,16 +347,16 @@ class Command(BaseCommand):
         self.stdout.write(f'  Modo: {"PRODUCCIÓN" if is_production else "DESARROLLO"}')
         self.stdout.write(self.style.SUCCESS('═'*70))
 
-        self.stdout.write(self.style.WARNING(f'\n📄 Credenciales guardadas en: {credenciales_path}'))
+        self.stdout.write(self.style.WARNING(f'\nCredenciales guardadas en: {credenciales_path}'))
 
         if is_production:
-            self.stdout.write(self.style.ERROR('\n⚠️  GUARDA EL ARCHIVO DE CREDENCIALES EN UN LUGAR SEGURO'))
+            self.stdout.write(self.style.ERROR('\nIMPORTANTE: Guarda el archivo de credenciales en un lugar seguro'))
             self.stdout.write(self.style.ERROR('    Las contraseñas son aleatorias y no se pueden recuperar.'))
         else:
-            self.stdout.write('\n📌 Ejemplo de acceso:')
+            self.stdout.write('\nEjemplo de acceso:')
             self.stdout.write(f'    Usuario: juez1')
             self.stdout.write(f'    Contraseña: juez1123')
             self.stdout.write(f'    Equipo asignado: #01 - Capyras')
 
-        self.stdout.write(self.style.SUCCESS('\n✓ Datos generados exitosamente!'))
+        self.stdout.write(self.style.SUCCESS('\nDatos generados exitosamente.'))
         self.stdout.write(self.style.SUCCESS('  El sistema está listo para UNL 5K ACTIVATE 2025\n'))
